@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: solidarytech-apps
+  namespace: argocd
+spec:
+  project: default
+  source:
+    # Quando o grupo colocar o repositório público ou configurar o token, altere a URL aqui:
+    repoURL: 'https://github.com/Aanastc/Fase5_posTech.git'
+    targetRevision: HEAD
+    path: k8s
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
