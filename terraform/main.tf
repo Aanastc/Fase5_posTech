@@ -26,6 +26,8 @@ provider "aws" {
   }
 }
 
+data "aws_caller_identity" "current" {}
+
 # -------------------------------------------------------------
 # VPC e Redes (Base)
 # -------------------------------------------------------------
@@ -58,7 +60,14 @@ module "eks" {
   subnet_ids               = module.vpc.private_subnets
   control_plane_subnet_ids = module.vpc.private_subnets
 
-  # Node Groups configurados de forma básica para manter os custos baixos (Rightsizing)
+  # Desabilita o aws-auth configmap para contornar o erro de iam:GetRole (AccessDenied) no AWS Academy
+  manage_aws_auth_configmap = false
+
+  # No AWS Academy, não podemos criar Roles novas (iam:CreateRole é bloqueado)
+  # Portanto, somos obrigados a usar a LabRole que já vem pré-criada na conta.
+  create_iam_role = false
+  iam_role_arn    = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/LabRole"
+
   eks_managed_node_groups = {
     spot_nodes = {
       min_size     = 1
@@ -67,6 +76,10 @@ module "eks" {
 
       instance_types = ["t3.medium"]
       capacity_type  = "SPOT" # Otimização de custo (FinOps)
+
+      # Usa a mesma LabRole para as máquinas worker nodes
+      create_iam_role = false
+      iam_role_arn    = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/LabRole"
     }
   }
 }
