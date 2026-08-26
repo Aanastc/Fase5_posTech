@@ -163,6 +163,18 @@ flask --app app run --host=0.0.0.0 --port=8083
 ```
 
 ---
+
+## 🚨 Passo 4: Configuração de SRE e Monitoramento (PagerDuty)
+
+Como parte dos requisitos de resiliência e SRE do Hackathon, utilizaremos o **PagerDuty** para o gerenciamento de incidentes e alertas.
+
+Para se cadastrar gratuitamente, é obrigatório utilizar um **e-mail institucional**. Você deve utilizar o seu e-mail acadêmico da FIAP.
+* **Exemplo de e-mail institucional:** `rm12345@fiap.com.br`
+* **Link para criar a conta:** [https://www.pagerduty.com/sign-up/](https://www.pagerduty.com/sign-up/)
+
+Após a criação da conta, você poderá configurar as integrações (ex: Grafana/Prometheus) para disparar alertas quando os SLOs dos microsserviços forem violados.
+
+---
 ### 🎉 Conclusão
 Agora você tem os três microsserviços rodando localmente no **Windows**, conectados aos bancos PostgreSQL no Docker e serviços da AWS. 
 Para validar, você pode acessar pelo navegador ou fazer requisições para:
