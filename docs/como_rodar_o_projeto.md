@@ -21,6 +21,23 @@ $env:AWS_REGION="us-east-1"
 
 *(Dica: Outra forma é colar essas informações no arquivo `C:\Users\SEU_USUARIO\.aws\credentials`, mas lembre-se de que cada membro fará isso na própria máquina com a própria conta do Academy).*
 
+### Atualizando as Credenciais no GitHub Actions (CI/CD)
+
+Além de configurar na sua máquina local, você precisa atualizar as credenciais no GitHub para que o CI/CD (Terraform e Docker) consiga publicar os recursos na AWS da sua conta. Criamos um script para atualizar isso rapidinho direto pelo terminal!
+
+1. Se não tiver, instale o **GitHub CLI** rodando no PowerShell como administrador:
+   ```powershell
+   winget install --id GitHub.cli
+   ```
+2. Após instalar, faça login no GitHub pelo terminal:
+   ```powershell
+   gh auth login
+   ```
+3. Sempre que as chaves da AWS Academy expirarem, rode o script abaixo na pasta do projeto com os seus novos tokens copiados:
+   ```powershell
+   .\update-github-secrets.ps1 -AccessKey 'COLE_AQUI_A_ACCESS_KEY' -SecretKey 'COLE_AQUI_A_SECRET_KEY' -SessionToken 'COLE_AQUI_O_TOKEN'
+   ```
+
 ---
 
 ## 🗄️ 2. Subindo a Infraestrutura Local (Bancos de Dados)
