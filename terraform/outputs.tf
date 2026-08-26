@@ -1,11 +1,11 @@
 output "eks_cluster_endpoint" {
   description = "Endpoint do plano de controle do EKS"
-  value       = module.eks.cluster_endpoint
+  value       = aws_eks_cluster.cluster.endpoint
 }
 
 output "eks_cluster_name" {
   description = "Nome do cluster EKS criado"
-  value       = module.eks.cluster_name
+  value       = aws_eks_cluster.cluster.name
 }
 
 output "sqs_queue_url" {
