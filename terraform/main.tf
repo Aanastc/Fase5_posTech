@@ -47,40 +47,36 @@ module "vpc" {
 }
 
 # -------------------------------------------------------------
-# Kubernetes (EKS Cluster)
+# Kubernetes (EKS Cluster) nativo - Evita erros do AWS Academy
 # -------------------------------------------------------------
-module "eks" {
-  source  = "terraform-aws-modules/eks/aws"
-  version = "~> 19.0"
+resource "aws_eks_cluster" "cluster" {
+  name     = "solidarytech-cluster"
+  version  = "1.28"
+  role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/LabRole"
 
-  cluster_name    = "solidarytech-cluster"
-  cluster_version = "1.28"
+  vpc_config {
+    subnet_ids              = module.vpc.private_subnets
+    endpoint_private_access = true
+    endpoint_public_access  = true
+  }
+}
 
-  vpc_id                   = module.vpc.vpc_id
-  subnet_ids               = module.vpc.private_subnets
-  control_plane_subnet_ids = module.vpc.private_subnets
+resource "aws_eks_node_group" "spot_nodes" {
+  cluster_name    = aws_eks_cluster.cluster.name
+  node_group_name = "spot_nodes"
+  node_role_arn   = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/LabRole"
+  subnet_ids      = module.vpc.private_subnets
+  capacity_type   = "SPOT"
+  instance_types  = ["t3.medium"]
 
-  # Desabilita o aws-auth configmap para contornar o erro de iam:GetRole (AccessDenied) no AWS Academy
-  manage_aws_auth_configmap = false
+  scaling_config {
+    desired_size = 2
+    max_size     = 3
+    min_size     = 1
+  }
 
-  # No AWS Academy, não podemos criar Roles novas (iam:CreateRole é bloqueado)
-  # Portanto, somos obrigados a usar a LabRole que já vem pré-criada na conta.
-  create_iam_role = false
-  iam_role_arn    = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/LabRole"
-
-  eks_managed_node_groups = {
-    spot_nodes = {
-      min_size     = 1
-      max_size     = 3
-      desired_size = 2
-
-      instance_types = ["t3.medium"]
-      capacity_type  = "SPOT" # Otimização de custo (FinOps)
-
-      # Usa a mesma LabRole para as máquinas worker nodes
-      create_iam_role = false
-      iam_role_arn    = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/LabRole"
-    }
+  update_config {
+    max_unavailable = 1
   }
 }
 
