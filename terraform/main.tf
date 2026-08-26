@@ -1,4 +1,10 @@
 terraform {
+  backend "s3" {
+    bucket = "solidarytech-terraform-state-hackathon" # VOCÊ PRECISA CRIAR ESSE BUCKET NA AWS ANTES!
+    key    = "state/terraform.tfstate"
+    region = "us-east-1"
+  }
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -83,5 +89,38 @@ resource "aws_dynamodb_table" "volunteers_table" {
   attribute {
     name = "volunteer_id"
     type = "S"
+  }
+}
+
+# -------------------------------------------------------------
+# AWS ECR (Repositórios de Imagens Docker)
+# -------------------------------------------------------------
+resource "aws_ecr_repository" "ngo_service" {
+  name                 = "solidarytech/ngo-service"
+  image_tag_mutability = "MUTABLE"
+  force_delete         = true # Permite deletar o ECR com imagens (facilita pro Hackathon)
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+
+resource "aws_ecr_repository" "donation_service" {
+  name                 = "solidarytech/donation-service"
+  image_tag_mutability = "MUTABLE"
+  force_delete         = true
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+
+resource "aws_ecr_repository" "volunteer_service" {
+  name                 = "solidarytech/volunteer-service"
+  image_tag_mutability = "MUTABLE"
+  force_delete         = true
+
+  image_scanning_configuration {
+    scan_on_push = true
   }
 }
