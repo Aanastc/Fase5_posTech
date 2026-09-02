@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    bucket = "solidarytech-terraform-state-hackathon"
+    bucket = "solidarytech-tf-state-147350477400"
     key    = "state/terraform.tfstate"
     region = "us-east-1"
   }
