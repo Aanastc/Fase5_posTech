@@ -43,10 +43,21 @@ module "vpc" {
 
   enable_nat_gateway = true
   single_nat_gateway = true
+
+  # Tags necessárias para integração do EKS com os Load Balancers da AWS
+  private_subnet_tags = {
+    "kubernetes.io/role/internal-elb"             = "1"
+    "kubernetes.io/cluster/solidarytech-cluster" = "shared"
+  }
+
+  public_subnet_tags = {
+    "kubernetes.io/role/elb"                      = "1"
+    "kubernetes.io/cluster/solidarytech-cluster" = "shared"
+  }
 }
 
 # -------------------------------------------------------------
-# AWS RDS PostgreSQL (Bancos para NGOs e Doacoes)
+# AWS RDS PostgreSQL
 # -------------------------------------------------------------
 resource "aws_security_group" "rds" {
   name        = "solidarytech-rds-sg"
@@ -74,10 +85,10 @@ resource "aws_db_subnet_group" "main" {
 }
 
 resource "aws_db_instance" "postgres" {
-  identifier     = "solidarytech-db"
-  engine         = "postgres"
-  engine_version = "15"
-  instance_class = "db.t3.micro"
+  identifier        = "solidarytech-db"
+  engine            = "postgres"
+  engine_version    = "15"
+  instance_class    = "db.t3.micro"
   allocated_storage = 20
 
   db_name  = "solidarytech"
@@ -85,14 +96,14 @@ resource "aws_db_instance" "postgres" {
   password = "SolidaryTech2024"
 
   vpc_security_group_ids = [aws_security_group.rds.id]
-  db_subnet_group_name  = aws_db_subnet_group.main.name
+  db_subnet_group_name   = aws_db_subnet_group.main.name
 
   skip_final_snapshot = true
   publicly_accessible = false
 }
 
 # -------------------------------------------------------------
-# Kubernetes (EKS Cluster) nativo
+# Kubernetes (EKS Cluster)
 # -------------------------------------------------------------
 resource "aws_eks_cluster" "cluster" {
   name     = "solidarytech-cluster"
@@ -104,11 +115,14 @@ resource "aws_eks_cluster" "cluster" {
     endpoint_private_access = true
     endpoint_public_access  = true
   }
+
+  # Garante que as rotas e NAT Gateway da VPC estejam prontos antes de criar o control plane do EKS
+  depends_on = [module.vpc]
 }
 
 resource "aws_eks_node_group" "spot_nodes" {
-  version       = "1.30"
-  cluster_name  = aws_eks_cluster.cluster.name
+  version         = "1.30"
+  cluster_name    = aws_eks_cluster.cluster.name
   node_group_name = "spot_nodes"
   node_role_arn   = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/LabRole"
   subnet_ids      = module.vpc.private_subnets
@@ -124,22 +138,24 @@ resource "aws_eks_node_group" "spot_nodes" {
   update_config {
     max_unavailable = 1
   }
+
+  depends_on = [aws_eks_cluster.cluster]
 }
 
 # -------------------------------------------------------------
-# AWS SQS (Mensageria para Doacoes)
+# AWS SQS
 # -------------------------------------------------------------
 resource "aws_sqs_queue" "donations_queue" {
   name = "solidary-donations"
 }
 
 # -------------------------------------------------------------
-# AWS DynamoDB (Banco NoSQL para Voluntarios)
+# AWS DynamoDB
 # -------------------------------------------------------------
 resource "aws_dynamodb_table" "volunteers_table" {
-  name           = "SolidaryTechVolunteers"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "volunteer_id"
+  name         = "SolidaryTechVolunteers"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "volunteer_id"
 
   attribute {
     name = "volunteer_id"
@@ -148,7 +164,7 @@ resource "aws_dynamodb_table" "volunteers_table" {
 }
 
 # -------------------------------------------------------------
-# AWS ECR (Repositorios de Imagens Docker)
+# AWS ECR
 # -------------------------------------------------------------
 resource "aws_ecr_repository" "ngo_service" {
   name                 = "solidarytech/ngo-service"
