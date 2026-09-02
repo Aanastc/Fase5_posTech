@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    bucket = "solidarytech-terraform-state-hackathon" # VOCÊ PRECISA CRIAR ESSE BUCKET NA AWS ANTES!
+    bucket = "solidarytech-tf-state-147350477400"
     key    = "state/terraform.tfstate"
     region = "us-east-1"
   }
@@ -16,7 +16,6 @@ terraform {
 provider "aws" {
   region = var.aws_region
 
-  # Tags obrigatórias do Hackathon aplicadas em todos os recursos gerados pelo Terraform
   default_tags {
     tags = {
       Project     = "SolidaryTech"
@@ -47,7 +46,53 @@ module "vpc" {
 }
 
 # -------------------------------------------------------------
-# Kubernetes (EKS Cluster) nativo - Evita erros do AWS Academy
+# AWS RDS PostgreSQL (Bancos para NGOs e Doacoes)
+# -------------------------------------------------------------
+resource "aws_security_group" "rds" {
+  name        = "solidarytech-rds-sg"
+  description = "Security group for RDS PostgreSQL"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress {
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = [module.vpc.vpc_cidr_block]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_db_subnet_group" "main" {
+  name       = "solidarytech-db-subnet"
+  subnet_ids = module.vpc.private_subnets
+}
+
+resource "aws_db_instance" "postgres" {
+  identifier     = "solidarytech-db"
+  engine         = "postgres"
+  engine_version = "15.3"
+  instance_class = "db.t3.micro"
+  allocated_storage = 20
+
+  db_name  = "solidarytech"
+  username = "admin"
+  password = "SolidaryTech2024"
+
+  vpc_security_group_ids = [aws_security_group.rds.id]
+  db_subnet_group_name  = aws_db_subnet_group.main.name
+
+  skip_final_snapshot = true
+  publicly_accessible = false
+}
+
+# -------------------------------------------------------------
+# Kubernetes (EKS Cluster) nativo
 # -------------------------------------------------------------
 resource "aws_eks_cluster" "cluster" {
   name     = "solidarytech-cluster"
@@ -81,18 +126,18 @@ resource "aws_eks_node_group" "spot_nodes" {
 }
 
 # -------------------------------------------------------------
-# AWS SQS (Mensageria para Doações)
+# AWS SQS (Mensageria para Doacoes)
 # -------------------------------------------------------------
 resource "aws_sqs_queue" "donations_queue" {
   name = "solidary-donations"
 }
 
 # -------------------------------------------------------------
-# AWS DynamoDB (Banco NoSQL para Voluntários)
+# AWS DynamoDB (Banco NoSQL para Voluntarios)
 # -------------------------------------------------------------
 resource "aws_dynamodb_table" "volunteers_table" {
   name           = "SolidaryTechVolunteers"
-  billing_mode   = "PAY_PER_REQUEST" # Economia de custos em ambientes sem tráfego previsível
+  billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "volunteer_id"
 
   attribute {
@@ -102,12 +147,12 @@ resource "aws_dynamodb_table" "volunteers_table" {
 }
 
 # -------------------------------------------------------------
-# AWS ECR (Repositórios de Imagens Docker)
+# AWS ECR (Repositorios de Imagens Docker)
 # -------------------------------------------------------------
 resource "aws_ecr_repository" "ngo_service" {
   name                 = "solidarytech/ngo-service"
   image_tag_mutability = "MUTABLE"
-  force_delete         = true # Permite deletar o ECR com imagens (facilita pro Hackathon)
+  force_delete         = true
 
   image_scanning_configuration {
     scan_on_push = true

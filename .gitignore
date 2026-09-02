@@ -1,0 +1,27 @@
+# Arquivos de ambiente (não commitar credenciais)
+.env
+.env.local
+*.env
+
+# Credenciais AWS
+aws_credentials
+credentials
+
+# Arquivos de build
+*.pyc
+__pycache__/
+*.egg-info/
+dist/
+build/
+
+# Docker
+Dockerfile.local
+
+# Terraform state local
+terraform.tfstate
+terraform.tfstate.*
+*.tfvars
+!terraform.tfvars.example
+
+# Logs
+*.log
