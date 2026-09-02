@@ -2,16 +2,11 @@ name: Full Deploy Pipeline
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-      - develop
-    paths:
-      - "terraform/**"
-      - "k8s/**"
-      - "ngo-service/**"
-      - "donation-service/**"
-      - "volunteer-service/**"
+    inputs:
+      confirmacao:
+        description: "Digite DEPLOY-TUDO para confirmar o deploy completo"
+        required: true
+        type: string
 
 jobs:
   # ============================================
@@ -21,6 +16,14 @@ jobs:
     name: Step 1 - Terraform Apply
     runs-on: ubuntu-latest
     steps:
+      - name: Verify Deploy Confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirmacao }}" != "DEPLOY-TUDO" ]; then
+            echo "Erro: Você precisa digitar 'DEPLOY-TUDO' para confirmar o deploy."
+            exit 1
+          fi
+          echo "Deploy confirmado!"
+
       - uses: actions/checkout@v4
 
       - name: Configure AWS
@@ -46,10 +49,14 @@ jobs:
             aws s3api create-bucket --bucket "${BUCKET}" --region us-east-1
           fi
 
-      - name: Terraform Init
+      - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.6.0
+
+      - name: Terraform Init
+        run: terraform init -reconfigure -backend-config="bucket=${{ steps.account.outputs.bucket_name }}"
+        working-directory: ./terraform
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
