@@ -23,11 +23,30 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-east-1
 
+      - name: Get AWS Account ID
+        id: account
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "account_id=${ACCOUNT_ID}" >> $GITHUB_OUTPUT
+          echo "bucket_name=solidarytech-tf-state-${ACCOUNT_ID}" >> $GITHUB_OUTPUT
+
+      - name: Create S3 bucket if not exists
+        run: |
+          BUCKET="${{ steps.account.outputs.bucket_name }}"
+          REGION="us-east-1"
+          if aws s3api head-bucket --bucket "${BUCKET}" --region "${REGION}" 2>/dev/null; then
+            echo "Bucket ${BUCKET} ja existe."
+          else
+            echo "Criando bucket ${BUCKET}..."
+            aws s3api create-bucket --bucket "${BUCKET}" --region "${REGION}"
+            echo "Bucket criado com sucesso!"
+          fi
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
 
       - name: Terraform Init
-        run: terraform init
+        run: terraform init -backend-config="bucket=${{ steps.account.outputs.bucket_name }}"
         working-directory: ./terraform
 
       - name: Terraform Apply
