@@ -44,7 +44,6 @@ module "vpc" {
   enable_nat_gateway = true
   single_nat_gateway = true
 
-  # Tags necessárias para integração do EKS com os Load Balancers da AWS
   private_subnet_tags = {
     "kubernetes.io/role/internal-elb"             = "1"
     "kubernetes.io/cluster/solidarytech-cluster" = "shared"
@@ -87,12 +86,12 @@ resource "aws_db_subnet_group" "main" {
 resource "aws_db_instance" "postgres" {
   identifier        = "solidarytech-db"
   engine            = "postgres"
-  engine_version    = "15" # A AWS seleciona automaticamente a minor versão ativa
+  engine_version    = "15"
   instance_class    = "db.t3.micro"
   allocated_storage = 20
 
   db_name  = "solidarytech"
-  username = "admin"
+  username = "postgres_admin" # Alterado: "admin" e reservado na AWS RDS Postgres
   password = "SolidaryTech2024"
 
   vpc_security_group_ids = [aws_security_group.rds.id]
@@ -107,7 +106,7 @@ resource "aws_db_instance" "postgres" {
 # -------------------------------------------------------------
 resource "aws_eks_cluster" "cluster" {
   name     = "solidarytech-cluster"
-  version  = "1.31" # Atualizado para a versão com suporte padrão ativo
+  version  = "1.31"
   role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/LabRole"
 
   vpc_config {
@@ -120,7 +119,7 @@ resource "aws_eks_cluster" "cluster" {
 }
 
 resource "aws_eks_node_group" "spot_nodes" {
-  version         = "1.31" # Sincronizado com a versão do cluster
+  version         = "1.31"
   cluster_name    = aws_eks_cluster.cluster.name
   node_group_name = "spot_nodes"
   node_role_arn   = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/LabRole"
