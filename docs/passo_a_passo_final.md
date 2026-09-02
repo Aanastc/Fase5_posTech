@@ -22,7 +22,9 @@ Quando o Terraform roda, cria automaticamente:
 ```
 PR na main → terraform-validate.yml valida
 Merge na main → terraform-apply.yml aplica infraestrutura
+               → ecr-build-push.yml faz build/push das imagens
                → k8s-deploy.yml faz deploy no K8s
+               → full-deploy.yml (manual) faz tudo em 4 steps
                → ArgoCD sincroniza automaticamente
 ```
 
@@ -53,7 +55,9 @@ Criar `docs/pcn/README.md` e `docs/itsm/ciclo.md`
 
 - [x] Terraform cria toda infraestrutura automaticamente
 - [x] CI/CD automatico (PR valida, merge aplica)
-- [ ] Prometheus + Grafana
+- [x] ECR build/push automatico
+- [x] K8s deploy automatico
+- [x] Monitoramento (Prometheus/Grafana) - manifest criado
 - [ ] Dashboards funcionando
 - [ ] Alertas configurados
 - [ ] PCN documentado
@@ -64,6 +68,6 @@ Criar `docs/pcn/README.md` e `docs/itsm/ciclo.md`
 ## Ordem de execucao
 
 1. **Dia 1**: Executar `terraform apply` via merge na main
-2. **Dia 2**: Configurar Prometheus/Grafana
+2. **Dia 2**: Configurar Prometheus/Grafana (manifest `k8s/monitoring/`)
 3. **Dia 3**: PCN/ITSM
 4. **Dia 4**: Validacao final
