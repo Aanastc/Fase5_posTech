@@ -1,0 +1,40 @@
+name: Update Envs and K8s
+
+on:
+  workflow_run:
+    workflows: ["Terraform Apply"]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  update-envs:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+
+      - name: Get Terraform outputs
+        id: tf-outputs
+        run: |
+          echo "rds_address=$(aws rds describe-db-instances --query 'DBInstances[0].Endpoint.Address' --output text)" >> $GITHUB_OUTPUT
+          echo "sqs_url=$(aws sqs get-queue-url --queue-name solidary-donations --query 'QueueUrl' --output text)" >> $GITHUB_OUTPUT
+          echo "dynamodb_table=$(aws dynamodb list-tables --query 'TableNames[0]' --output text)" >> $GITHUB_OUTPUT
+
+      - name: Update Kubernetes configmap with real values
+        run: |
+          kubectl apply -f k8s/namespace.yaml
+          kubectl create configmap solidarytech-config \
+            --from-literal=DATABASE_URL="postgres://admin:SolidaryTech2024@${{ steps.tf-outputs.outputs.rds_address }}:5432/solidarytech" \
+            --from-literal=AWS_SQS_URL="${{ steps.tf-outputs.outputs.sqs_url }}" \
+            --from-literal=DYNAMODB_TABLE="${{ steps.tf-outputs.outputs.dynamodb_table }}" \
+            --namespace=solidarytech \
+            --dry-run=client -o yaml | kubectl apply -f -

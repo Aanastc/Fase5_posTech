@@ -1,7 +1,11 @@
-name: Terraform Apply Manual
+name: Terraform Apply
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "terraform/**"
 
 jobs:
   terraform-apply:
@@ -26,5 +30,6 @@ jobs:
         working-directory: ./terraform
 
       - name: Terraform Apply
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: terraform apply -auto-approve
         working-directory: ./terraform
