@@ -76,7 +76,7 @@ resource "aws_db_subnet_group" "main" {
 resource "aws_db_instance" "postgres" {
   identifier     = "solidarytech-db"
   engine         = "postgres"
-  engine_version = "15.3"
+  engine_version = "15.5"
   instance_class = "db.t3.micro"
   allocated_storage = 20
 
@@ -96,7 +96,7 @@ resource "aws_db_instance" "postgres" {
 # -------------------------------------------------------------
 resource "aws_eks_cluster" "cluster" {
   name     = "solidarytech-cluster"
-  version  = "1.28"
+  version  = "1.27"
   role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/LabRole"
 
   vpc_config {
