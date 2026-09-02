@@ -76,7 +76,7 @@ resource "aws_db_subnet_group" "main" {
 resource "aws_db_instance" "postgres" {
   identifier     = "solidarytech-db"
   engine         = "postgres"
-  engine_version = "15.8"
+  engine_version = "15"
   instance_class = "db.t3.micro"
   allocated_storage = 20
 
@@ -107,7 +107,8 @@ resource "aws_eks_cluster" "cluster" {
 }
 
 resource "aws_eks_node_group" "spot_nodes" {
-  cluster_name    = aws_eks_cluster.cluster.name
+  version       = "1.30"
+  cluster_name  = aws_eks_cluster.cluster.name
   node_group_name = "spot_nodes"
   node_role_arn   = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/LabRole"
   subnet_ids      = module.vpc.private_subnets
