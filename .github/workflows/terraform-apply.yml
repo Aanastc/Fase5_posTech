@@ -26,16 +26,15 @@ jobs:
       - name: Get AWS Account ID
         id: account
         run: |
-          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          echo "account_id=${ACCOUNT_ID}" >> $GITHUB_OUTPUT
-          echo "bucket_name=solidarytech-tf-state-${ACCOUNT_ID}" >> $GITHUB_OUTPUT
+          echo "account_id=$(aws sts get-caller-identity --query Account --output text)" >> $GITHUB_OUTPUT
+          echo "bucket_name=solidarytech-tf-state-$(aws sts get-caller-identity --query Account --output text)" >> $GITHUB_OUTPUT
 
-      - name: Create S3 bucket if not exists
+      - name: Create S3 Bucket
         run: |
           BUCKET="${{ steps.account.outputs.bucket_name }}"
           REGION="us-east-1"
           if aws s3api head-bucket --bucket "${BUCKET}" --region "${REGION}" 2>/dev/null; then
-            echo "Bucket ${BUCKET} ja existe."
+            echo "Bucket ${BUCKET} ja existe"
           else
             echo "Criando bucket ${BUCKET}..."
             aws s3api create-bucket --bucket "${BUCKET}" --region "${REGION}"
