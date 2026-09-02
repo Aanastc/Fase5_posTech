@@ -2,11 +2,24 @@ name: Deploy Manual Services
 
 on:
   workflow_dispatch:
+    inputs:
+      confirmacao:
+        description: "Digite EXECUTAR para confirmar o deploy manual"
+        required: true
+        type: string
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Verify Deploy Confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirmacao }}" != "EXECUTAR" ]; then
+            echo "Erro: Você precisa digitar 'EXECUTAR' para confirmar o deploy manual."
+            exit 1
+          fi
+          echo "Deploy manual confirmado!"
+
       - uses: actions/checkout@v4
 
       - name: Configure AWS
