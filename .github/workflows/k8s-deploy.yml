@@ -4,7 +4,7 @@ on:
   workflow_run:
     workflows: ["Terraform Apply"]
     types: [completed]
-    branches: [main]
+    branches: [main, develop]
 
 jobs:
   update-k8s:
