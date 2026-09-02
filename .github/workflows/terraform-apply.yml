@@ -45,7 +45,7 @@ jobs:
         uses: hashicorp/setup-terraform@v2
 
       - name: Terraform Init
-        run: terraform init -backend-config="bucket=${{ steps.account.outputs.bucket_name }}"
+        run: terraform init -reconfigure -backend-config="bucket=${{ steps.account.outputs.bucket_name }}"
         working-directory: ./terraform
 
       - name: Terraform Apply
