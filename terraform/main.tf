@@ -87,7 +87,7 @@ resource "aws_db_subnet_group" "main" {
 resource "aws_db_instance" "postgres" {
   identifier        = "solidarytech-db"
   engine            = "postgres"
-  engine_version    = "15"
+  engine_version    = "15" # A AWS seleciona automaticamente a minor versão ativa
   instance_class    = "db.t3.micro"
   allocated_storage = 20
 
@@ -107,7 +107,7 @@ resource "aws_db_instance" "postgres" {
 # -------------------------------------------------------------
 resource "aws_eks_cluster" "cluster" {
   name     = "solidarytech-cluster"
-  version  = "1.30"
+  version  = "1.31" # Atualizado para a versão com suporte padrão ativo
   role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/LabRole"
 
   vpc_config {
@@ -116,12 +116,11 @@ resource "aws_eks_cluster" "cluster" {
     endpoint_public_access  = true
   }
 
-  # Garante que as rotas e NAT Gateway da VPC estejam prontos antes de criar o control plane do EKS
   depends_on = [module.vpc]
 }
 
 resource "aws_eks_node_group" "spot_nodes" {
-  version         = "1.30"
+  version         = "1.31" # Sincronizado com a versão do cluster
   cluster_name    = aws_eks_cluster.cluster.name
   node_group_name = "spot_nodes"
   node_role_arn   = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/LabRole"
