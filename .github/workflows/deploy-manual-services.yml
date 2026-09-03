@@ -82,6 +82,7 @@ jobs:
 
       - name: Apply K8s Manifests & Restart Deployments
         run: |
+          kubectl apply -f k8s/namespace.yaml
           kubectl apply -f k8s/ngo-service.yaml
           kubectl apply -f k8s/donation-service.yaml
           kubectl apply -f k8s/volunteer-service.yaml
