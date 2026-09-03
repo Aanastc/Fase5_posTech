@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    bucket = "solidarytech-tf-state-147350477400"
+    bucket = "solidarytech-terraform-state-857799120036" # Substitua pelo seu Account ID caso esteja em outra conta AWS
     key    = "state/terraform.tfstate"
     region = "us-east-1"
   }
@@ -106,7 +106,7 @@ resource "aws_db_instance" "postgres" {
 # -------------------------------------------------------------
 resource "aws_eks_cluster" "cluster" {
   name     = "solidarytech-cluster"
-  version  = "1.31"
+  version  = "1.30"
   role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/LabRole"
 
   vpc_config {
@@ -119,12 +119,13 @@ resource "aws_eks_cluster" "cluster" {
 }
 
 resource "aws_eks_node_group" "spot_nodes" {
-  version         = "1.31"
+  version         = "1.30"
   cluster_name    = aws_eks_cluster.cluster.name
   node_group_name = "spot_nodes"
   node_role_arn   = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/LabRole"
   subnet_ids      = module.vpc.private_subnets
   capacity_type   = "SPOT"
+  ami_type        = "AL2023_x86_64_STANDARD"
   instance_types  = ["t3.medium"]
 
   scaling_config {

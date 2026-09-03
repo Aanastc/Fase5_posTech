@@ -175,9 +175,103 @@ Para se cadastrar gratuitamente, é obrigatório utilizar um **e-mail institucio
 Após a criação da conta, você poderá configurar as integrações (ex: Grafana/Prometheus) para disparar alertas quando os SLOs dos microsserviços forem violados.
 
 ---
+
+## ☁️ Passo 5: Subindo a Infraestrutura e Microsserviços para a AWS
+
+Quando a validação local estiver concluída, você poderá subir toda a stack para a nuvem da AWS. Disponibilizamos **duas opções**: execução manual via **Terminal (PowerShell)** ou execução automatizada via **GitHub Actions (Run Workflow)**.
+
+---
+
+### Opção 1: 100% via Terminal (Execução Manual no PowerShell)
+
+Esta opção permite provisionar e inspecionar cada componente em tempo real.
+
+#### 5.1. Configurar Credenciais Ativas da AWS
+No PowerShell, configure as credenciais da sua conta ou da sessão atual do AWS Academy:
+```powershell
+$env:AWS_ACCESS_KEY_ID="COLE_AQUI_O_ACCESS_KEY"
+$env:AWS_SECRET_ACCESS_KEY="COLE_AQUI_A_SECRET_KEY"
+$env:AWS_SESSION_TOKEN="COLE_AQUI_O_TOKEN"
+$env:AWS_REGION="us-east-1"
+```
+
+Valide se a AWS está respondendo:
+```powershell
+aws sts get-caller-identity
+```
+
+#### 5.2. Criar o Bucket S3 para o Backend do Terraform (Se necessário)
+O Terraform guarda o estado (`tfstate`) em um bucket S3 (`solidarytech-terraform-state-857799120036`):
+```powershell
+aws s3 mb s3://solidarytech-terraform-state-857799120036 --region us-east-1
+```
+
+#### 5.3. Aplicar o Terraform (VPC, EKS, DynamoDB, SQS e ECR)
+```powershell
+cd terraform
+terraform init
+terraform plan
+terraform apply -auto-approve
+cd ..
+```
+
+#### 5.4. Build e Push das Imagens Docker para o Amazon ECR
+Capture o ID da sua conta AWS e faça o login no registry ECR:
+```powershell
+$ACCOUNT_ID = (aws sts get-caller-identity --query Account --output text)
+$ECR_REGISTRY = "$ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com"
+
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
+
+# Build e envio do NGO Service
+docker build -t "$ECR_REGISTRY/solidarytech/ngo-service:latest" ./ngo-service
+docker push "$ECR_REGISTRY/solidarytech/ngo-service:latest"
+
+# Build e envio do Donation Service
+docker build -t "$ECR_REGISTRY/solidarytech/donation-service:latest" ./donation-service
+docker push "$ECR_REGISTRY/solidarytech/donation-service:latest"
+
+# Build e envio do Volunteer Service
+docker build -t "$ECR_REGISTRY/solidarytech/volunteer-service:latest" ./volunteer-service
+docker push "$ECR_REGISTRY/solidarytech/volunteer-service:latest"
+```
+
+#### 5.5. Conectar ao Cluster EKS e Realizar o Deploy
+Atualize a configuração do `kubectl` e aplique os manifestos do Kubernetes:
+```powershell
+# Configura o contexto do Kubernetes para o cluster EKS
+aws eks update-kubeconfig --region us-east-1 --name solidarytech-cluster
+
+# Aplica os manifestos (ConfigMaps, Secrets, Services, Deployments)
+kubectl apply -f ./k8s/
+
+# Monitora a subida dos pods
+kubectl get pods -w
+```
+
+---
+
+### Opção 2: Via GitHub Actions (CI/CD Automatizado via Run Workflow)
+
+Esta opção permite acionar a esteira de entrega contínua diretamente pela interface do GitHub Actions.
+
+#### 5.1. Atualizar os Secrets no GitHub
+Use o script `update-github-secrets.ps1` com o `gh CLI` para injetar as credenciais da AWS nos secrets do repositório:
+```powershell
+.\update-github-secrets.ps1 -AccessKey "SUA_ACCESS_KEY" -SecretKey "SUA_SECRET_KEY" -SessionToken "SEU_TOKEN"
+```
+
+#### 5.2. Executar o Workflow do Terraform
+1. Acesse o repositório no GitHub e vá para a aba **Actions**.
+2. Na lista de workflows, clique em **Terraform Apply Manual**.
+3. Clique em **Run workflow** -> selecione a branch `main` -> confirme no botão **Run workflow**.
+4. Aguarde o provisionamento de toda a infraestrutura na AWS.
+
+#### 5.3. Executar o Build e Deploy dos Microsserviços
+- Dê um push de commits na branch `main` ou acione os workflows individuais (`NGO Service CI`, `Donation Service CI`, `Volunteer Service CI`) via interface de Actions.
+- As imagens passarão por verificação de segurança com o **Trivy** e serão enviadas aos repositórios ECR criados.
+
+---
 ### 🎉 Conclusão
-Agora você tem os três microsserviços rodando localmente no **Windows**, conectados aos bancos PostgreSQL no Docker e serviços da AWS. 
-Para validar, você pode acessar pelo navegador ou fazer requisições para:
-*   `http://localhost:8081` (NGO Service)
-*   `http://localhost:8082` (Donation Service)
-*   `http://localhost:8083` (Volunteer Service)
+Agora você tem o guia completo tanto para rodar localmente quanto para subir toda a arquitetura para a nuvem da **AWS**, seja manualmente via **Terminal** ou de forma automatizada via **GitHub Actions**.
+

@@ -6,8 +6,7 @@ WORKDIR /app
 # Instala dependências necessárias no Alpine
 RUN apk update && apk add --no-cache git ca-certificates tzdata
 
-COPY go.mod ./
-# Se houver go.sum, inclua aqui. Como não listado, assumimos que possa ser gerado.
+COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .

@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: donation-service
-        image: solidarytech/donation-service:latest
+        image: 857799120036.dkr.ecr.us-east-1.amazonaws.com/solidarytech/donation-service:latest
         ports:
         - containerPort: 8082
         envFrom:

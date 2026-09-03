@@ -1,27 +1,46 @@
-# Arquivos de ambiente (não commitar credenciais)
+﻿# Arquivos de ambiente (não commitar credenciais)
 .env
 .env.local
+.env.*
 *.env
 
 # Credenciais AWS
 aws_credentials
 credentials
 
-# Arquivos de build
+# Arquivos de build & Python
 *.pyc
 __pycache__/
 *.egg-info/
 dist/
 build/
+venv/
+env/
+.venv/
+
+# Go
+/donation-service/bin/
 
 # Docker
 Dockerfile.local
 
-# Terraform state local
-terraform.tfstate
-terraform.tfstate.*
+# Terraform state local e cache
+**/.terraform/*
+*.tfstate
+*.tfstate.*
 *.tfvars
 !terraform.tfvars.example
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
 
 # Logs
 *.log

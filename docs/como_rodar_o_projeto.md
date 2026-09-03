@@ -113,3 +113,107 @@ cd volunteer-service
 pip install -r requirements.txt
 flask --app app run --host=0.0.0.0 --port=8083
 ```
+
+---
+
+## 🚀 5. Subindo Tudo para a AWS (Deploy na Nuvem)
+
+Você pode realizar o deploy completo da infraestrutura e dos microsserviços de duas maneiras: **100% via Terminal** ou **Automatizado via GitHub Actions (Run Workflow)**.
+
+---
+
+### Opção A: 100% via Terminal (Execução Manual no PowerShell)
+
+Esta opção dá controle total e imediato de cada etapa diretamente no terminal da sua máquina.
+
+#### 5.1. Configurar as credenciais ativas da AWS no terminal
+Certifique-se de que as credenciais do AWS Academy estão ativas no seu terminal antes de executar os comandos:
+```powershell
+$env:AWS_ACCESS_KEY_ID="COLE_AQUI_O_ACCESS_KEY"
+$env:AWS_SECRET_ACCESS_KEY="COLE_AQUI_A_SECRET_KEY"
+$env:AWS_SESSION_TOKEN="COLE_AQUI_O_TOKEN"
+$env:AWS_REGION="us-east-1"
+```
+
+Valide se as credenciais estão ativas:
+```powershell
+aws sts get-caller-identity
+```
+
+#### 5.2. Criar o Bucket S3 para o Backend do Terraform (Caso ainda não exista)
+O Terraform utiliza o bucket S3 configurado em `terraform/main.tf` para armazenar o estado:
+```powershell
+aws s3 mb s3://solidarytech-terraform-state-857799120036 --region us-east-1
+```
+
+#### 5.3. Provisionar a Infraestrutura com Terraform
+Navegue até a pasta `terraform` e execute:
+```powershell
+cd terraform
+terraform init
+terraform plan
+terraform apply -auto-approve
+cd ..
+```
+> Isso criará: VPC, Subnets, EKS Cluster (`solidarytech-cluster`), Node Group Spot, fila SQS (`solidary-donations`), tabela DynamoDB (`SolidaryTechVolunteers`) e os 3 repositórios no AWS ECR.
+
+#### 5.4. Build e Push das Imagens Docker para o Amazon ECR
+Obtenha o seu `Account ID` da AWS e autentique o Docker no ECR:
+```powershell
+$ACCOUNT_ID = (aws sts get-caller-identity --query Account --output text)
+$ECR_REGISTRY = "$ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com"
+
+# Login no ECR
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
+
+# Build e Push - NGO Service
+docker build -t "$ECR_REGISTRY/solidarytech/ngo-service:latest" ./ngo-service
+docker push "$ECR_REGISTRY/solidarytech/ngo-service:latest"
+
+# Build e Push - Donation Service
+docker build -t "$ECR_REGISTRY/solidarytech/donation-service:latest" ./donation-service
+docker push "$ECR_REGISTRY/solidarytech/donation-service:latest"
+
+# Build e Push - Volunteer Service
+docker build -t "$ECR_REGISTRY/solidarytech/volunteer-service:latest" ./volunteer-service
+docker push "$ECR_REGISTRY/solidarytech/volunteer-service:latest"
+```
+
+#### 5.5. Conectar ao EKS e Aplicar os Manifestos do Kubernetes
+Atualize o `kubeconfig` local para apontar para o cluster da AWS e aplique os manifestos da pasta `k8s`:
+```powershell
+# Atualiza kubeconfig
+aws eks update-kubeconfig --region us-east-1 --name solidarytech-cluster
+
+# Aplica ConfigMaps, Secrets e Deployments
+kubectl apply -f ./k8s/
+
+# Verifica os pods e serviços em execução
+kubectl get pods -o wide
+kubectl get svc
+```
+
+---
+
+### Opção B: Via GitHub Actions (CI/CD com Run Workflow)
+
+Esta opção utiliza as pipelines automatizadas do repositório no GitHub.
+
+#### 5.1. Atualizar as credenciais nos Secrets do GitHub
+Atualize os segredos do repositório utilizando o script `update-github-secrets.ps1` (ou manualmente na aba *Settings -> Secrets and variables -> Actions* do repositório):
+```powershell
+.\update-github-secrets.ps1 -AccessKey "SUA_ACCESS_KEY" -SecretKey "SUA_SECRET_KEY" -SessionToken "SEU_TOKEN"
+```
+
+#### 5.2. Disparar a criação da infraestrutura (Terraform Apply)
+1. No GitHub, acesse a aba **Actions**.
+2. No menu lateral esquerdo, clique no workflow **Terraform Apply Manual**.
+3. Clique no botão **Run workflow**, selecione a branch `main` e confirme.
+4. Aguarde a conclusão do job para que a VPC, o EKS e os repositórios ECR sejam provisionados.
+
+#### 5.3. Disparar o Build, Análise de Vulnerabilidade e Deploy dos Serviços
+Com os repositórios ECR criados pelo Terraform:
+- Faça um `git push` para a branch `main` com alterações dos serviços, **OU**
+- Acesse as pipelines de CI de cada serviço na aba **Actions** e dispare o workflow.
+- O GitHub Actions irá rodar o build do Docker, escanear com **Trivy** e publicar a imagem diretamente no ECR.
+
