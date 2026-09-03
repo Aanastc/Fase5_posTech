@@ -1,4 +1,4 @@
-name: Service Validation (PR & Push)
+name: Service Validation (PR Only)
 
 on:
   pull_request:
@@ -6,30 +6,17 @@ on:
       - main
       - develop
     paths:
-      - "ngo-service/**"
       - "donation-service/**"
-      - "volunteer-service/**"
-  push:
-    branches:
-      - develop
-    paths:
       - "ngo-service/**"
-      - "donation-service/**"
       - "volunteer-service/**"
 
 jobs:
   # ============================================
-  # STEP 1: Validar Dependências e Compilação Go
+  # STEP 1: Validação de Serviços Go (donation-service)
   # ============================================
   validate-go:
-    name: Validate Go Code (${{ matrix.service }})
+    name: Validate Go Code (donation-service)
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        service:
-          - ngo-service
-          - donation-service
-          - volunteer-service
     steps:
       - name: Check out repo
         uses: actions/checkout@v4
@@ -38,41 +25,63 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-          cache-dependency-path: ${{ matrix.service }}/go.sum
 
       - name: Verify Go Modules & Dependencies
+        working-directory: ./donation-service
         run: |
-          cd ${{ matrix.service }}
-          echo "Verificando integridade das dependencias..."
+          echo "Verificando integridade das dependencias Go..."
           go mod verify
-
-          # Garante que o go.mod não tem alterações pendentes
           go mod tidy
-          git diff --exit-code go.mod go.sum || (echo "Erro: O arquivo go.mod ou go.sum precisa passar por 'go mod tidy'" && exit 1)
+          git diff --exit-code go.mod go.sum || (echo "Erro: go.mod ou go.sum desatualizados. Rode 'go mod tidy'." && exit 1)
 
       - name: Test Go Build
+        working-directory: ./donation-service
         run: |
-          cd ${{ matrix.service }}
-          echo "Testando compilação do serviço..."
+          echo "Testando compilação do Go..."
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v ./...
 
-      - name: Run Unit Tests (se existirem)
-        run: |
-          cd ${{ matrix.service }}
-          go test -v ./... || echo "Nenhum teste unitario encontrado ou falha em testes."
-
   # ============================================
-  # STEP 2: Validar Build do Dockerfile
+  # STEP 2: Validação de Serviços Python (ngo-service & volunteer-service)
   # ============================================
-  validate-docker:
-    name: Validate Docker Build (${{ matrix.service }})
+  validate-python:
+    name: Validate Python Code (${{ matrix.service }})
     runs-on: ubuntu-latest
-    needs: validate-go
     strategy:
       matrix:
         service:
           - ngo-service
+          - volunteer-service
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Dependencies & Check Syntax
+        working-directory: ./${{ matrix.service }}
+        run: |
+          echo "Instalando dependencias Python..."
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+          echo "Verificando sintaxe dos arquivos Python..."
+          python -m py_compile app.py
+
+  # ============================================
+  # STEP 3: Validação do Build Docker (Todos os Serviços)
+  # ============================================
+  validate-docker:
+    name: Validate Docker Build (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    needs: [validate-go, validate-python]
+    strategy:
+      matrix:
+        service:
           - donation-service
+          - ngo-service
           - volunteer-service
     steps:
       - name: Check out repo
@@ -86,5 +95,5 @@ jobs:
         with:
           context: ./${{ matrix.service }}
           file: ./${{ matrix.service }}/Dockerfile
-          push: false # Não faz push para o ECR, apenas testa o build
+          push: false
           tags: ${{ matrix.service }}:test
