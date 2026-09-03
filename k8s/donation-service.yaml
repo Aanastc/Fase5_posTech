@@ -24,17 +24,6 @@ spec:
           envFrom:
             - configMapRef:
                 name: solidarytech-config
-          env:
-            - name: DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: solidarytech-secrets
-                  key: DONATION_DATABASE_URL
-            - name: AWS_SQS_URL
-              valueFrom:
-                secretKeyRef:
-                  name: solidarytech-secrets
-                  key: AWS_SQS_URL
           # FinOps: Rightsizing. Sendo Go, gasta menos memória, mas se for hot path pode precisar de CPU.
           resources:
             requests:
