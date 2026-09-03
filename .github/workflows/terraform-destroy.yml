@@ -6,7 +6,7 @@ on:
       confirm:
         description: 'Digite "DESTRUIR" para confirmar a exclusão de todos os recursos na AWS'
         required: true
-        default: ''
+        default: ""
 
 jobs:
   terraform-destroy:
@@ -14,23 +14,35 @@ jobs:
     if: github.event.inputs.confirm == 'DESTRUIR'
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-east-1
 
+      - name: Get AWS Account ID
+        id: account
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "bucket_name=solidarytech-tf-state-${ACCOUNT_ID}" >> $GITHUB_OUTPUT
+
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
 
       - name: Terraform Init
-        run: terraform init
+        env:
+          BUCKET_NAME: ${{ steps.account.outputs.bucket_name }}
+        run: |
+          echo "Inicializando Terraform com backend no bucket: ${BUCKET_NAME}"
+          terraform init -reconfigure -backend-config="bucket=${BUCKET_NAME}"
         working-directory: ./terraform
 
       - name: Terraform Destroy
-        run: terraform destroy -auto-approve
+        run: terraform destroy -auto-approve -var="db_password=${{ secrets.DB_PASSWORD }}"
         working-directory: ./terraform

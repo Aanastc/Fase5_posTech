@@ -89,6 +89,8 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
 
       - name: Terraform Init
         env:
@@ -100,5 +102,5 @@ jobs:
 
       - name: Terraform Apply
         if: (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')) || github.event_name == 'workflow_dispatch'
-        run: terraform apply -auto-approve
+        run: terraform apply -auto-approve -var="db_password=${{ secrets.DB_PASSWORD }}"
         working-directory: ./terraform
