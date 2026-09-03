@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: donation-service
+  namespace: solidarytech
   labels:
     app: donation-service
 spec:
@@ -16,38 +17,39 @@ spec:
         app: donation-service
     spec:
       containers:
-      - name: donation-service
-        image: solidarytech/donation-service:latest
-        ports:
-        - containerPort: 8082
-        envFrom:
-        - configMapRef:
-            name: solidarytech-config
-        env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: solidarytech-secrets
-              key: DONATION_DATABASE_URL
-        - name: AWS_SQS_URL
-          valueFrom:
-            secretKeyRef:
-              name: solidarytech-secrets
-              key: AWS_SQS_URL
-        # FinOps: Rightsizing. Sendo Go, gasta menos memória, mas se for hot path pode precisar de CPU.
-        resources:
-          requests:
-            memory: "64Mi"
-            cpu: "200m"
-          limits:
-            memory: "128Mi"
-            cpu: "500m"
+        - name: donation-service
+          image: solidarytech/donation-service:latest
+          ports:
+            - containerPort: 8082
+          envFrom:
+            - configMapRef:
+                name: solidarytech-config
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: solidarytech-secrets
+                  key: DONATION_DATABASE_URL
+            - name: AWS_SQS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: solidarytech-secrets
+                  key: AWS_SQS_URL
+          # FinOps: Rightsizing. Sendo Go, gasta menos memória, mas se for hot path pode precisar de CPU.
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "200m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: donation-service
+  namespace: solidarytech
 spec:
   selector:
     app: donation-service

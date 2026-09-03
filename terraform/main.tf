@@ -8,7 +8,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0"
+      version = "5.80.0"
     }
   }
 }
@@ -45,12 +45,12 @@ module "vpc" {
   single_nat_gateway = true
 
   private_subnet_tags = {
-    "kubernetes.io/role/internal-elb"             = "1"
+    "kubernetes.io/role/internal-elb"           = "1"
     "kubernetes.io/cluster/solidarytech-cluster" = "shared"
   }
 
   public_subnet_tags = {
-    "kubernetes.io/role/elb"                      = "1"
+    "kubernetes.io/role/elb"                    = "1"
     "kubernetes.io/cluster/solidarytech-cluster" = "shared"
   }
 }
@@ -91,8 +91,8 @@ resource "aws_db_instance" "postgres" {
   allocated_storage = 20
 
   db_name  = "solidarytech"
-  username = "postgres_admin" # Alterado: "admin" e reservado na AWS RDS Postgres
-  password = "SolidaryTech2024"
+  username = "postgres_admin"
+  password = var.db_password
 
   vpc_security_group_ids = [aws_security_group.rds.id]
   db_subnet_group_name   = aws_db_subnet_group.main.name
