@@ -1,11 +1,17 @@
 variable "aws_region" {
-  description = "A região da AWS onde a infraestrutura será criada"
   type        = string
   default     = "us-east-1"
+  description = "Região da AWS"
 }
 
 variable "environment" {
-  description = "Ambiente (ex: Production, Staging, Dev)"
   type        = string
-  default     = "Production"
+  default     = "production"
+  description = "Ambiente de implantação"
+}
+
+variable "db_password" {
+  type        = string
+  description = "Senha do usuário administrador do banco de dados RDS PostgreSQL"
+  sensitive   = true
 }
