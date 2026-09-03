@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ngo-service
+  namespace: solidarytech
   labels:
     app: ngo-service
 spec:
@@ -15,33 +16,34 @@ spec:
         app: ngo-service
     spec:
       containers:
-      - name: ngo-service
-        image: solidarytech/ngo-service:latest
-        ports:
-        - containerPort: 8081
-        envFrom:
-        - configMapRef:
-            name: solidarytech-config
-        env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: solidarytech-secrets
-              key: NGO_DATABASE_URL
-        # FinOps: Rightsizing obrigatório (Limites e Pedidos)
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
-            memory: "256Mi"
-            cpu: "250m"
+        - name: ngo-service
+          image: solidarytech/ngo-service:latest
+          ports:
+            - containerPort: 8081
+          envFrom:
+            - configMapRef:
+                name: solidarytech-config
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: solidarytech-secrets
+                  key: NGO_DATABASE_URL
+          # FinOps: Rightsizing obrigatório (Limites e Pedidos)
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: ngo-service
+  namespace: solidarytech
 spec:
   selector:
     app: ngo-service
