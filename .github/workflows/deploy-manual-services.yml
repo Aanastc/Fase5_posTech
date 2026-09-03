@@ -1,0 +1,53 @@
+name: Deploy Manual Services
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmacao:
+        description: "Digite EXECUTAR para confirmar o deploy manual"
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify Deploy Confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirmacao }}" != "EXECUTAR" ]; then
+            echo "Erro: Você precisa digitar 'EXECUTAR' para confirmar o deploy manual."
+            exit 1
+          fi
+          echo "Deploy manual confirmado!"
+
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+
+      - name: Configure kubectl
+        run: aws eks update-kubeconfig --region us-east-1 --name solidarytech-cluster
+
+      - name: Build & Push to ECR
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com
+          for svc in ngo-service donation-service volunteer-service; do
+            IMAGE="${ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/solidarytech/${svc}:latest"
+            docker build -t "${IMAGE}" "${svc}/"
+            docker push "${IMAGE}"
+          done
+
+      - name: Deploy Services
+        run: |
+          kubectl apply -f k8s/ngo-service.yaml
+          kubectl apply -f k8s/donation-service.yaml
+          kubectl apply -f k8s/volunteer-service.yaml
+          kubectl rollout restart deployment/ngo-service -n solidarytech
+          kubectl rollout restart deployment/donation-service -n solidarytech
+          kubectl rollout restart deployment/volunteer-service -n solidarytech
