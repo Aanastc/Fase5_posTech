@@ -1,0 +1,35 @@
+{
+  "annotations": { "list": [] },
+  "title": "SolidaryTech - Visão Geral",
+  "uid": "solidarytech-overview",
+  "schemaVersion": 38,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Pods Running",
+      "targets": [
+        {
+          "expr": "sum(kube_pod_status_phase{namespace=~\"solidarytech|monitoring|argocd\",phase=\"Running\"})"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Pods com Erro",
+      "targets": [
+        {
+          "expr": "sum(kube_pod_status_phase{namespace=~\"solidarytech|monitoring|argocd\",phase=~\"Failed|Pending\"})"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Uso de Memória por Pod (solidarytech)",
+      "targets": [
+        {
+          "expr": "sum by (pod) (container_memory_working_set_bytes{namespace=\"solidarytech\", container!=\"\"})"
+        }
+      ]
+    }
+  ]
+}

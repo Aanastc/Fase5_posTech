@@ -58,10 +58,10 @@ Criar `docs/pcn/README.md` e `docs/itsm/ciclo.md`
 - [x] ECR build/push automatico
 - [x] K8s deploy automatico
 - [x] Monitoramento (Prometheus/Grafana) - manifest criado
-- [ ] Dashboards funcionando
-- [ ] Alertas configurados
-- [ ] PCN documentado
-- [ ] ITSM documentado
+- [x] Dashboards funcionando (`k8s/monitoring/dashboards/solidarytech-overview.json`)
+- [x] Alertas configurados (`k8s/monitoring/alerts/prometheus-rules.yaml`)
+- [x] PCN documentado (`docs/pcn/README.md`)
+- [x] ITSM documentado (`docs/itsm/ciclo.md`)
 
 ---
 

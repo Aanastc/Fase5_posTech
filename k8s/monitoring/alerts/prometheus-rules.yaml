@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/monitoring.coreos.com/prometheusrule_v1.json
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: solidarytech-alerts
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  groups:
+    - name: solidarytech.rules
+      rules:
+        - alert: PodFailing
+          expr: kube_pod_status_phase{namespace="solidarytech", phase=~"Failed|Pending"} > 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Pod {{ $labels.pod }} no namespace solidarytech está com problema"
+
+        - alert: HighMemoryUsage
+          expr: sum(container_memory_working_set_bytes{namespace="solidarytech", container!=""}) by (pod) > (500 * 1024 * 1024)
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Pod {{ $labels.pod }} usando muita memória"
