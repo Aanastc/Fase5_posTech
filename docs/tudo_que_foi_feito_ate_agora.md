@@ -45,11 +45,46 @@ Este documento serve como um log de registro das atividades realizadas no reposi
    - Atualizado `terraform/main.tf` com bucket S3 dinâmico (`solidarytech-tf-state-{ACCOUNT_ID}`).
    - Corrigidas versões do RDS (`15`) e EKS (`1.30`).
 
+8. **Deploy na AWS (Dupla Opção: Terminal vs GitHub Actions):**
+   - Documentado em `docs/como_rodar_o_projeto.md` e `docs/passo_a_passo.md` o fluxo completo de subida para a AWS cobrindo as duas abordagens: manual via Terminal (PowerShell) e automatizada via GitHub Actions (`workflow_dispatch`).
+
+9. **Ajustes Técnicos e Correções de Engenharia para a Entrega na AWS:**
+   - **Upgrade de Versão do EKS (Kubernetes 1.30):** Atualizado `terraform/main.tf` de 1.28 para 1.30 devido à descontinuação de criação da versão 1.28 pela AWS.
+   - **Compatibilidade de Nós EKS (AMI AL2023):** Configurado `ami_type = "AL2023_x86_64_STANDARD"` para os nós spot do Kubernetes 1.30.
+   - **S3 Backend com Naming Global Único:** Criação e configuração do bucket de state com o Account ID (`solidarytech-terraform-state-857799120036`), contornando colisão global de nomes no S3.
+   - **Correção no `donation-service` (Go):** 
+     - Removida dependência incorreta de subpacote no `go.mod` e gerado o `go.sum` via `go mod tidy`.
+     - Removidos imports não utilizados (`fmt` e `strconv`) em `main.go` que barravam a compilação do container.
+     - Ajustado o `Dockerfile` multistage para copiar o `go.sum`.
+   - **Integração dos Manifestos Kubernetes com a AWS:**
+     - Deployments atualizados para puxar imagens do Amazon ECR privado (`857799120036.dkr.ecr.us-east-1.amazonaws.com/...`).
+     - Secrets/ConfigMaps atualizados com a URL real da fila SQS provisionada (`solidary-donations`).
+
+10. **Implantação de Banco Relacional Dedicado no Kubernetes (`k8s/postgres.yaml`):**
+   - Criado e aplicado o manifesto com PostgreSQL 15, service `postgres-host` e ConfigMap de inicialização criando `ngo_db` e `donation_db`.
+   - Todos os pods dos 3 microsserviços estabilizados e operando com status `1/1 Running` (0 restarts).
+
+11. **GitOps com ArgoCD Ativado no Cluster EKS:**
+   - Instalados os CRDs, serviços e controladores do ArgoCD no namespace `argocd` via Server-Side Apply.
+   - Aplicado o manifesto `k8s/argocd-application.yaml` para orquestração declarativa contínua.
+
+---
+
+## 📊 Status Consolidado da Infraestrutura e Deploy na AWS
+- **Bucket S3 State:** `solidarytech-terraform-state-857799120036` (Criado e ativo)
+- **VPC & Networking:** `solidarytech-vpc` (10.0.0.0/16, Subnets privadas/públicas, IGW, NAT Gateway)
+- **Mensageria & NoSQL:** Fila SQS `solidary-donations` e DynamoDB `SolidaryTechVolunteers` (Modo Pay-per-request / FinOps)
+- **Repositórios ECR:** Repositórios criados e com imagens versionadas dos 3 microsserviços.
+- **Cluster EKS:** `solidarytech-cluster` ativo com 2 nós Spot (`t3.medium`) em status `Ready`.
+- **GitOps (ArgoCD):** 7 componentes ativos no namespace `argocd` gerenciando `solidarytech-apps`.
+- **Deployments & Services:** Todos os pods das aplicações e do PostgreSQL em status `1/1 Running`.
+
 ---
 
 ## 🚧 O que está faltando (Próximos Passos pelo Grupo)
-
-- [x] Aplicar o Terraform na AWS Academy. _(Validação aprovada)_
-- [ ] Conectar os serviços reais (AWS SQS e DynamoDB) na infraestrutura do Kubernetes.
-- [ ] Finalizar as configurações de SRE (SLIs, SLOs e Dashboards do Grafana).
+- [x] Aplicar o Terraform na AWS Academy. *(Provisionado com sucesso)*
+- [x] Executar o deploy no cluster EKS com as credenciais ativas da sessão. *(Realizado: ECR, EKS Cluster 1.30, Worker Nodes e Deployments ativos)*
+- [x] Conectar os serviços reais (AWS SQS, DynamoDB e PostgreSQL) no Kubernetes. *(Realizado: Postgres no cluster, SQS e DynamoDB integrados)*
+- [x] Ativar o GitOps via ArgoCD no cluster EKS. *(Instalado e Application aplicada)*
+- [ ] Finalizar as configurações de SRE (SLIs, SLOs e Dashboards do Grafana/APM).
 - [ ] Documentar o Plano de Continuidade de Negócios (PCN) e Ciclo ITSM.
