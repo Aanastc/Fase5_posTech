@@ -1,6 +1,5 @@
 terraform {
   backend "s3" {
-    bucket = "solidarytech-terraform-state-857799120036" # Substitua pelo seu Account ID caso esteja em outra conta AWS
     key    = "state/terraform.tfstate"
     region = "us-east-1"
   }
@@ -8,7 +7,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0"
+      version = "~> 5.80"
     }
   }
 }
@@ -45,12 +44,12 @@ module "vpc" {
   single_nat_gateway = true
 
   private_subnet_tags = {
-    "kubernetes.io/role/internal-elb"             = "1"
+    "kubernetes.io/role/internal-elb"           = "1"
     "kubernetes.io/cluster/solidarytech-cluster" = "shared"
   }
 
   public_subnet_tags = {
-    "kubernetes.io/role/elb"                      = "1"
+    "kubernetes.io/role/elb"                    = "1"
     "kubernetes.io/cluster/solidarytech-cluster" = "shared"
   }
 }
@@ -91,8 +90,8 @@ resource "aws_db_instance" "postgres" {
   allocated_storage = 20
 
   db_name  = "solidarytech"
-  username = "postgres_admin" # Alterado: "admin" e reservado na AWS RDS Postgres
-  password = "SolidaryTech2024"
+  username = "postgres_admin"
+  password = var.db_password
 
   vpc_security_group_ids = [aws_security_group.rds.id]
   db_subnet_group_name   = aws_db_subnet_group.main.name
@@ -106,7 +105,7 @@ resource "aws_db_instance" "postgres" {
 # -------------------------------------------------------------
 resource "aws_eks_cluster" "cluster" {
   name     = "solidarytech-cluster"
-  version  = "1.30"
+  version  = "1.31"
   role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/LabRole"
 
   vpc_config {
@@ -119,7 +118,7 @@ resource "aws_eks_cluster" "cluster" {
 }
 
 resource "aws_eks_node_group" "spot_nodes" {
-  version         = "1.30"
+  version         = "1.31"
   cluster_name    = aws_eks_cluster.cluster.name
   node_group_name = "spot_nodes"
   node_role_arn   = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/LabRole"

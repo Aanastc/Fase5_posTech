@@ -40,7 +40,7 @@ jobs:
         id: account
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          BUCKET_NAME="solidarytech-tf-state-${ACCOUNT_ID}"
+          BUCKET_NAME="solidarytech-terraform-state-${ACCOUNT_ID}"
           echo "account_id=${ACCOUNT_ID}" >> $GITHUB_OUTPUT
           echo "bucket_name=${BUCKET_NAME}" >> $GITHUB_OUTPUT
 
@@ -89,16 +89,18 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
 
       - name: Terraform Init
         env:
           BUCKET_NAME: ${{ needs.create-s3-bucket.outputs.bucket_name }}
         run: |
           echo "Inicializando o backend S3 com o bucket: ${BUCKET_NAME}"
-          terraform init -reconfigure -backend-config="bucket=${BUCKET_NAME}"
+          terraform init -reconfigure -upgrade -backend-config="bucket=${BUCKET_NAME}"
         working-directory: ./terraform
 
       - name: Terraform Apply
         if: (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')) || github.event_name == 'workflow_dispatch'
-        run: terraform apply -auto-approve
+        run: terraform apply -auto-approve -var="db_password=${{ secrets.DB_PASSWORD }}"
         working-directory: ./terraform

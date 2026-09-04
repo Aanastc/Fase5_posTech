@@ -2,12 +2,12 @@ name: Update Envs and K8s
 
 on:
   workflow_run:
-    workflows: ["Terraform Apply"]
+    workflows: ["Terraform Apply (Manual|Trigger)"]
     types: [completed]
     branches: [main, develop]
 
 jobs:
-  update-k8s:
+  update-envs:
     runs-on: ubuntu-latest
     if: github.event.workflow_run.conclusion == 'success'
     steps:
@@ -22,32 +22,78 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-east-1
 
-      - name: Get AWS resources
-        id: resources
-        run: |
-          echo "rds_address=$(aws rds describe-db-instances --query 'DBInstances[0].Endpoint.Address' --output text)" >> $GITHUB_OUTPUT
-          echo "sqs_url=$(aws sqs get-queue-url --queue-name solidary-donations --query 'QueueUrl' --output text)" >> $GITHUB_OUTPUT
-
       - name: Configure kubectl
         run: aws eks update-kubeconfig --region us-east-1 --name solidarytech-cluster
 
-      - name: Create namespace
+      - name: Get AWS Resources
+        id: tf-outputs
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "account_id=${ACCOUNT_ID}" >> $GITHUB_OUTPUT
+          echo "rds_address=$(aws rds describe-db-instances --query 'DBInstances[0].Endpoint.Address' --output text)" >> $GITHUB_OUTPUT
+          echo "sqs_url=$(aws sqs get-queue-url --queue-name solidary-donations --query 'QueueUrl' --output text)" >> $GITHUB_OUTPUT
+          echo "dynamodb_table=$(aws dynamodb list-tables --query 'TableNames[0]' --output text)" >> $GITHUB_OUTPUT
+
+      - name: Create Namespace
         run: kubectl apply -f k8s/namespace.yaml
 
-      - name: Update configmap with real values
+      - name: Create ECR Secret for Kubernetes
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          REGION="us-east-1"
+          TOKEN=$(aws ecr get-login-password --region $REGION)
+
+          kubectl create secret docker-registry ecr-secret \
+            --namespace=solidarytech \
+            --docker-server=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com \
+            --docker-username=AWS \
+            --docker-password="${TOKEN}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Install Argo CD CRDs and Server
+        run: |
+          kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
+          kubectl apply --server-side --force-conflicts -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+          sleep 10
+
+      - name: Configure Argo CD Git Credentials
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          GITHUB_USER: "Aanastc"
+        run: |
+          kubectl apply -f - <<EOF
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: repo-github-solidarytech
+            namespace: argocd
+            labels:
+              argocd.argoproj.io/secret-type: repository
+          type: Opaque
+          stringData:
+            type: git
+            url: https://github.com/Aanastc/Fase5_posTech.git
+            password: ${GH_PAT}
+            username: ${GITHUB_USER}
+          EOF
+
+      - name: Register App in Argo CD
+        run: |
+          if [ -f k8s/argocd-application.yaml ]; then
+            kubectl apply -f k8s/argocd-application.yaml -n argocd
+          fi
+
+      - name: Update Kubernetes configmap with real values
         run: |
           kubectl create configmap solidarytech-config \
-            --from-literal=DATABASE_URL="postgres://admin:SolidaryTech2024@${{ steps.resources.outputs.rds_address }}:5432/solidarytech" \
-            --from-literal=AWS_SQS_URL="${{ steps.resources.outputs.sqs_url }}" \
-            --from-literal=AWS_REGION=us-east-1 \
+            --from-literal=DATABASE_URL="postgres://postgres_admin:${{ secrets.DB_PASSWORD }}@${{ steps.tf-outputs.outputs.rds_address }}:5432/solidarytech" \
+            --from-literal=AWS_SQS_URL="${{ steps.tf-outputs.outputs.sqs_url }}" \
+            --from-literal=DYNAMODB_TABLE="${{ steps.tf-outputs.outputs.dynamodb_table }}" \
             --namespace=solidarytech \
             --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Deploy services
+      - name: Apply Prometheus Rules
         run: |
-          kubectl apply -f k8s/ngo-service.yaml
-          kubectl apply -f k8s/donation-service.yaml
-          kubectl apply -f k8s/volunteer-service.yaml
-          kubectl rollout restart deployment/ngo-service -n solidarytech
-          kubectl rollout restart deployment/donation-service -n solidarytech
-          kubectl rollout restart deployment/volunteer-service -n solidarytech
+          if [ -f k8s/monitoring/alerts/prometheus-rules.yaml ]; then
+            kubectl apply -f k8s/monitoring/alerts/prometheus-rules.yaml -n monitoring
+          fi

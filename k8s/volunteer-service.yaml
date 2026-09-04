@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: volunteer-service
+  namespace: solidarytech
   labels:
     app: volunteer-service
 spec:
@@ -14,28 +15,31 @@ spec:
       labels:
         app: volunteer-service
     spec:
+      imagePullSecrets:
+        - name: ecr-secret
       containers:
-      - name: volunteer-service
-        image: 857799120036.dkr.ecr.us-east-1.amazonaws.com/solidarytech/volunteer-service:latest
-        ports:
-        - containerPort: 8083
-        envFrom:
-        - configMapRef:
-            name: solidarytech-config
-        # FinOps: Rightsizing obrigatório (Limites e Pedidos)
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
-            memory: "256Mi"
-            cpu: "250m"
+        - name: volunteer-service
+          image: solidarytech/volunteer-service:latest
+          ports:
+            - containerPort: 8083
+          envFrom:
+            - configMapRef:
+                name: solidarytech-config
+          # FinOps: Rightsizing obrigatório (Limites e Pedidos)
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: volunteer-service
+  namespace: solidarytech
 spec:
   selector:
     app: volunteer-service
