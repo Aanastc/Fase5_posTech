@@ -37,13 +37,26 @@ jobs:
       - name: Create Namespace
         run: kubectl apply -f k8s/namespace.yaml
 
+      # --- PASSO DINÂMICO DO ECR SECRET ADICIONADO AQUI ---
+      - name: Create ECR Secret for Kubernetes
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          REGION="us-east-1"
+          TOKEN=$(aws ecr get-login-password --region $REGION)
+
+          kubectl create secret docker-registry ecr-secret \
+            --namespace=solidarytech \
+            --docker-server=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com \
+            --docker-username=AWS \
+            --docker-password="${TOKEN}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
       - name: Install Argo CD CRDs and Server
         run: |
           kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
           kubectl apply --server-side --force-conflicts -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
           sleep 10
 
-      # --- PASSO ADICIONADO AQUI ---
       - name: Configure Argo CD Git Credentials
         env:
           GH_PAT: ${{ secrets.GH_PAT }}

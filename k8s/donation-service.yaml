@@ -16,6 +16,8 @@ spec:
       labels:
         app: donation-service
     spec:
+      imagePullSecrets:
+        - name: ecr-secret
       containers:
         - name: donation-service
           image: solidarytech/donation-service:latest
