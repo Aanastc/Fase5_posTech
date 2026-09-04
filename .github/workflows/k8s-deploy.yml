@@ -37,6 +37,13 @@ jobs:
       - name: Create Namespace
         run: kubectl apply -f k8s/namespace.yaml
 
+      # --- CORREÇÃO DO ARGO CD AQUI ---
+      - name: Install Argo CD CRDs and Server
+        run: |
+          kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
+          kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+          sleep 10
+
       - name: Register App in Argo CD
         run: |
           if [ -f k8s/argocd-application.yaml ]; then
@@ -71,7 +78,6 @@ jobs:
           kubectl rollout restart deployment/donation-service -n solidarytech
           kubectl rollout restart deployment/volunteer-service -n solidarytech
 
-      # --- ETAPA DO PROMETHEUS ADICIONADA AQUI ---
       - name: Apply Prometheus Rules
         run: |
           if [ -f k8s/monitoring/alerts/prometheus-rules.yaml ]; then
