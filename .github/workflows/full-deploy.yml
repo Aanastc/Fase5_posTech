@@ -198,26 +198,6 @@ jobs:
             --namespace=solidarytech \
             --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Deploy Services with Direct ECR Registry
-        run: |
-          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          ECR_REGISTRY="${ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com"
-
-          # Substitui a imagem genérica pela URL completa do ECR nos arquivos antes de aplicar
-          sed -i "s|solidarytech/ngo-service:latest|${ECR_REGISTRY}/solidarytech/ngo-service:latest|g" k8s/ngo-service.yaml
-          sed -i "s|solidarytech/donation-service:latest|${ECR_REGISTRY}/solidarytech/donation-service:latest|g" k8s/donation-service.yaml
-          sed -i "s|solidarytech/volunteer-service:latest|${ECR_REGISTRY}/solidarytech/volunteer-service:latest|g" k8s/volunteer-service.yaml
-
-          # Aplica os arquivos já apontando diretamente para o ECR
-          kubectl apply -f k8s/ngo-service.yaml -n solidarytech
-          kubectl apply -f k8s/donation-service.yaml -n solidarytech
-          kubectl apply -f k8s/volunteer-service.yaml -n solidarytech
-
-          # Garante o restart para pegar o ConfigMap atualizado
-          kubectl rollout restart deployment/ngo-service -n solidarytech
-          kubectl rollout restart deployment/donation-service -n solidarytech
-          kubectl rollout restart deployment/volunteer-service -n solidarytech
-
   # ============================================
   # STEP 4: Monitoring (Prometheus + Grafana)
   # ============================================
