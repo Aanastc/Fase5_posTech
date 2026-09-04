@@ -143,6 +143,12 @@ jobs:
       - name: Create Namespace
         run: kubectl apply -f k8s/namespace.yaml
 
+      - name: Register App in Argo CD
+        run: |
+          if [ -f k8s/argocd-application.yaml ]; then
+            kubectl apply -f k8s/argocd-application.yaml -n argocd
+          fi
+
       - name: Update ConfigMap
         run: |
           kubectl create configmap solidarytech-config \
@@ -204,6 +210,14 @@ jobs:
             -n monitoring \
             --create-namespace \
             -f k8s/monitoring/prometheus-values.yaml
+
+      - name: Apply Prometheus Rules
+        run: |
+          if [ -f k8s/monitoring/alerts/prometheus-rules.yaml ]; then
+            echo "Aguardando CRDs do Prometheus estarem disponíveis..."
+            sleep 10
+            kubectl apply -f k8s/monitoring/alerts/prometheus-rules.yaml -n monitoring
+          fi
 
       - name: Verify Monitoring
         run: |

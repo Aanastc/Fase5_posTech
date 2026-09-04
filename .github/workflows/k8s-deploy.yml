@@ -37,6 +37,13 @@ jobs:
       - name: Create Namespace
         run: kubectl apply -f k8s/namespace.yaml
 
+      # --- ETAPA DO ARGO CD ADICIONADA AQUI ---
+      - name: Register App in Argo CD
+        run: |
+          if [ -f k8s/argocd-application.yaml ]; then
+            kubectl apply -f k8s/argocd-application.yaml -n argocd
+          fi
+
       - name: Update Kubernetes configmap with real values
         run: |
           kubectl create configmap solidarytech-config \
