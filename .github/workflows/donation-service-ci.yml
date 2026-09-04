@@ -64,5 +64,14 @@ jobs:
 
       - name: Deploy Service
         run: |
-          kubectl apply -f k8s/donation-service.yaml
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          ECR_REGISTRY="${ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com"
+
+          # 1. Substitui a imagem genérica pela URL completa do ECR no YAML antes de aplicar
+          sed -i "s|solidarytech/donation-service:latest|${ECR_REGISTRY}/solidarytech/donation-service:latest|g" k8s/donation-service.yaml
+
+          # 2. Aplica o manifesto atualizado com a imagem do ECR no namespace correto
+          kubectl apply -f k8s/donation-service.yaml -n solidarytech
+
+          # 3. Força a reinicialização dos pods para carregar a nova imagem
           kubectl rollout restart deployment/donation-service -n solidarytech

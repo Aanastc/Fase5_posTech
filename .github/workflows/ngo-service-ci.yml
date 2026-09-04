@@ -64,5 +64,14 @@ jobs:
 
       - name: Deploy Service
         run: |
-          kubectl apply -f k8s/ngo-service.yaml
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          ECR_REGISTRY="${ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com"
+
+          # 1. Substitui a imagem genérica pela URL completa do ECR no YAML antes de aplicar
+          sed -i "s|solidarytech/ngo-service:latest|${ECR_REGISTRY}/solidarytech/ngo-service:latest|g" k8s/ngo-service.yaml
+
+          # 2. Aplica o manifesto atualizado no namespace correto
+          kubectl apply -f k8s/ngo-service.yaml -n solidarytech
+
+          # 3. Força a reinicialização para carregar a nova imagem do ECR
           kubectl rollout restart deployment/ngo-service -n solidarytech
