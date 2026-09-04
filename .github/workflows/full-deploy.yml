@@ -143,12 +143,33 @@ jobs:
       - name: Create Namespace
         run: kubectl apply -f k8s/namespace.yaml
 
-      # --- CORREÇÃO COM --server-side E --force-conflicts ---
       - name: Install Argo CD CRDs and Server
         run: |
           kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
           kubectl apply --server-side --force-conflicts -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
           sleep 10
+
+      # --- PASSO ADICIONADO AQUI ---
+      - name: Configure Argo CD Git Credentials
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          GITHUB_USER: "Aanastc"
+        run: |
+          kubectl apply -f - <<EOF
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: repo-github-solidarytech
+            namespace: argocd
+            labels:
+              argocd.argoproj.io/secret-type: repository
+          type: Opaque
+          stringData:
+            type: git
+            url: https://github.com/Aanastc/Fase5_posTech.git
+            password: ${GH_PAT}
+            username: ${GITHUB_USER}
+          EOF
 
       - name: Register App in Argo CD
         run: |
