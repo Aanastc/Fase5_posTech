@@ -38,7 +38,7 @@ jobs:
         id: account
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          BUCKET_NAME="solidarytech-tf-state-${ACCOUNT_ID}"
+          BUCKET_NAME="solidarytech-terraform-state-${ACCOUNT_ID}"
           echo "account_id=${ACCOUNT_ID}" >> $GITHUB_OUTPUT
           echo "bucket_name=${BUCKET_NAME}" >> $GITHUB_OUTPUT
 
@@ -48,6 +48,7 @@ jobs:
           if aws s3api head-bucket --bucket "${BUCKET}" --region us-east-1 2>/dev/null; then
             echo "Bucket ${BUCKET} ja existe"
           else
+            echo "Criando bucket ${BUCKET}..."
             aws s3api create-bucket --bucket "${BUCKET}" --region us-east-1
           fi
 
@@ -170,6 +171,7 @@ jobs:
           kubectl rollout restart deployment/ngo-service -n solidarytech
           kubectl rollout restart deployment/donation-service -n solidarytech
           kubectl rollout restart deployment/volunteer-service -n solidarytech
+
   # ============================================
   # STEP 4: Monitoring (Prometheus + Grafana)
   # ============================================

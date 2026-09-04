@@ -40,7 +40,7 @@ jobs:
         id: account
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          BUCKET_NAME="solidarytech-tf-state-${ACCOUNT_ID}"
+          BUCKET_NAME="solidarytech-terraform-state-${ACCOUNT_ID}"
           echo "account_id=${ACCOUNT_ID}" >> $GITHUB_OUTPUT
           echo "bucket_name=${BUCKET_NAME}" >> $GITHUB_OUTPUT
 

@@ -28,7 +28,8 @@ jobs:
         id: account
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          echo "bucket_name=solidarytech-tf-state-${ACCOUNT_ID}" >> $GITHUB_OUTPUT
+          # Nome corrigido padronizado com -terraform-
+          echo "bucket_name=solidarytech-terraform-state-${ACCOUNT_ID}" >> $GITHUB_OUTPUT
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -46,3 +47,10 @@ jobs:
       - name: Terraform Destroy
         run: terraform destroy -auto-approve -var="db_password=${{ secrets.DB_PASSWORD }}"
         working-directory: ./terraform
+
+      - name: Clean S3 State Bucket (Optional Cleanup)
+        if: success()
+        run: |
+          BUCKET="${{ steps.account.outputs.bucket_name }}"
+          echo "Limpando e removendo o bucket S3 do Terraform State: ${BUCKET}"
+          aws s3 rb "s3://${BUCKET}" --force || true
