@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>&#x1f4dd; Tudo o que foi feito at&eacute; agora</title>
+            <style>
+/* From extension vscode.github */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.vscode-dark img[src$=\#gh-light-mode-only],
+.vscode-light img[src$=\#gh-dark-mode-only],
+.vscode-high-contrast:not(.vscode-high-contrast-light) img[src$=\#gh-light-mode-only],
+.vscode-high-contrast-light img[src$=\#gh-dark-mode-only] {
+	display: none;
+}
+
+</style>
+            
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item {
+    list-style-type: none;
+}
+
+.task-list-item-checkbox {
+    margin-left: -20px;
+    vertical-align: middle;
+    pointer-events: none;
+}
+</style>
+<style>
+:root {
+  --color-note: #0969da;
+  --color-tip: #1a7f37;
+  --color-warning: #9a6700;
+  --color-severe: #bc4c00;
+  --color-caution: #d1242f;
+  --color-important: #8250df;
+}
+
+</style>
+<style>
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-note: #2f81f7;
+    --color-tip: #3fb950;
+    --color-warning: #d29922;
+    --color-severe: #db6d28;
+    --color-caution: #f85149;
+    --color-important: #a371f7;
+  }
+}
+
+</style>
+<style>
+.markdown-alert {
+  padding: 0.5rem 1rem;
+  margin-bottom: 16px;
+  color: inherit;
+  border-left: .25em solid #888;
+}
+
+.markdown-alert>:first-child {
+  margin-top: 0
+}
+
+.markdown-alert>:last-child {
+  margin-bottom: 0
+}
+
+.markdown-alert .markdown-alert-title {
+  display: flex;
+  font-weight: 500;
+  align-items: center;
+  line-height: 1
+}
+
+.markdown-alert .markdown-alert-title .octicon {
+  margin-right: 0.5rem;
+  display: inline-block;
+  overflow: visible !important;
+  vertical-align: text-bottom;
+  fill: currentColor;
+}
+
+.markdown-alert.markdown-alert-note {
+  border-left-color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-note .markdown-alert-title {
+  color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-important {
+  border-left-color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-important .markdown-alert-title {
+  color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-warning {
+  border-left-color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-warning .markdown-alert-title {
+  color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-tip {
+  border-left-color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-tip .markdown-alert-title {
+  color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-caution {
+  border-left-color: var(--color-caution);
+}
+
+.markdown-alert.markdown-alert-caution .markdown-alert-title {
+  color: var(--color-caution);
+}
+
+</style>
+        
+        </head>
+        <body class="vscode-body vscode-light">
+            <span id="markdown-mermaid" aria-hidden="true" data-config="{&quot;darkModeTheme&quot;:&quot;vscode&quot;,&quot;lightModeTheme&quot;:&quot;vscode&quot;,&quot;maxTextSize&quot;:50000,&quot;clickDrag&quot;:&quot;alt&quot;,&quot;showControls&quot;:&quot;onHoverOrFocus&quot;,&quot;resizable&quot;:true,&quot;maxHeight&quot;:&quot;&quot;}"></span>
+				<h1 id="-tudo-o-que-foi-feito-até-agora">📝 Tudo o que foi feito até agora</h1>
+<p>Este documento serve como um log de registro das atividades realizadas no repositório até o momento, para manter o grupo alinhado.</p>
+<h2 id="-o-que-já-foi-realizado">✅ O que já foi realizado:</h2>
+<ol>
+<li>
+<p><strong>Revisão da Documentação e Setup Local:</strong></p>
+<ul>
+<li>Lemos e interpretamos o <code>README.md</code> e o escopo oficial (PDF) do Hackathon da Fase 5.</li>
+<li>Criamos o <code>docs/passo_a_passo.md</code> (tutorial detalhado focado em Windows/PowerShell e Flask, incluindo setup do PagerDuty).</li>
+<li>Criamos o <code>docs/como_rodar_o_projeto.md</code> (guia com o script de rotacionar credenciais do AWS Academy).</li>
+</ul>
+</li>
+<li>
+<p><strong>Conteinerização (Docker):</strong></p>
+<ul>
+<li>Criados <code>Dockerfile</code> para <code>ngo-service</code> (Python), <code>volunteer-service</code> (Python) e <code>donation-service</code> (Go multistage).</li>
+</ul>
+</li>
+<li>
+<p><strong>Infraestrutura como Código (Terraform) + FinOps:</strong></p>
+<ul>
+<li>Configurada a fundação na pasta <code>terraform/</code> (backend S3 e ECRs).</li>
+<li>Substituído o módulo oficial do EKS por <strong>recursos nativos (<code>aws_eks_cluster</code>)</strong> para contornar o bloqueio de <code>iam:GetRole</code> do AWS Academy, utilizando a <code>LabRole</code> obrigatória.</li>
+<li>Inseridas as <strong>Tags Obrigatórias de FinOps</strong> no provider (<code>Project</code>, <code>Environment</code>, <code>CostCenter</code>).</li>
+</ul>
+</li>
+<li>
+<p><strong>Orquestração e Rightsizing (Kubernetes):</strong></p>
+<ul>
+<li>Criados os manifestos na pasta <code>k8s/</code> e implementado o <strong>Rightsizing</strong> (limites e requests).</li>
+</ul>
+</li>
+<li>
+<p><strong>DevSecOps e CI/CD (GitHub Actions):</strong></p>
+<ul>
+<li>Pipeline refatorada em múltiplos arquivos separados por serviço (<code>ngo-service-ci.yml</code>, <code>donation-service-ci.yml</code>, <code>volunteer-service-ci.yml</code>).</li>
+<li>Pipelines do Terraform desmembradas (Validate no PR, Apply manual, Destroy manual).</li>
+<li>Criado o script <code>update-github-secrets.ps1</code> usando o <code>gh CLI</code> para automação dos segredos da AWS Academy.</li>
+</ul>
+</li>
+<li>
+<p><strong>GitOps (ArgoCD):</strong></p>
+<ul>
+<li>Criado o arquivo <code>k8s/argocd-application.yaml</code>.</li>
+</ul>
+</li>
+<li>
+<p><strong>Deploy na AWS (Dupla Opção: Terminal vs GitHub Actions):</strong></p>
+<ul>
+<li>Documentado em <code>docs/como_rodar_o_projeto.md</code> e <code>docs/passo_a_passo.md</code> o fluxo completo de subida para a AWS cobrindo as duas abordagens: manual via Terminal (PowerShell) e automatizada via GitHub Actions (<code>workflow_dispatch</code>).</li>
+</ul>
+</li>
+<li>
+<p><strong>Ajustes Técnicos e Correções de Engenharia para a Entrega na AWS:</strong></p>
+<ul>
+<li><strong>Upgrade de Versão do EKS (Kubernetes 1.30):</strong> Atualizado <code>terraform/main.tf</code> de 1.28 para 1.30 devido à descontinuação de criação da versão 1.28 pela AWS.</li>
+<li><strong>Compatibilidade de Nós EKS (AMI AL2023):</strong> Configurado <code>ami_type = &quot;AL2023_x86_64_STANDARD&quot;</code> para os nós spot do Kubernetes 1.30.</li>
+<li><strong>S3 Backend com Naming Global Único:</strong> Criação e configuração do bucket de state com o Account ID (<code>solidarytech-terraform-state-857799120036</code>), contornando colisão global de nomes no S3.</li>
+<li><strong>Correção no <code>donation-service</code> (Go):</strong>
+<ul>
+<li>Removida dependência incorreta de subpacote no <code>go.mod</code> e gerado o <code>go.sum</code> via <code>go mod tidy</code>.</li>
+<li>Removidos imports não utilizados (<code>fmt</code> e <code>strconv</code>) em <code>main.go</code> que barravam a compilação do container.</li>
+<li>Ajustado o <code>Dockerfile</code> multistage para copiar o <code>go.sum</code>.</li>
+</ul>
+</li>
+<li><strong>Integração dos Manifestos Kubernetes com a AWS:</strong>
+<ul>
+<li>Deployments atualizados para puxar imagens do Amazon ECR privado (<code>857799120036.dkr.ecr.us-east-1.amazonaws.com/...</code>).</li>
+<li>Secrets/ConfigMaps atualizados com a URL real da fila SQS provisionada (<code>solidary-donations</code>).</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>Implantação de Banco Relacional Dedicado no Kubernetes (<code>k8s/postgres.yaml</code>):</strong></p>
+<ul>
+<li>Criado e aplicado o manifesto com PostgreSQL 15, service <code>postgres-host</code> e ConfigMap de inicialização criando <code>ngo_db</code> e <code>donation_db</code>.</li>
+<li>Todos os pods dos 3 microsserviços estabilizados e operando com status <code>1/1 Running</code> (0 restarts).</li>
+</ul>
+</li>
+<li>
+<p><strong>GitOps com ArgoCD Ativado no Cluster EKS:</strong></p>
+</li>
+</ol>
+<ul>
+<li>Instalados os CRDs, serviços e controladores do ArgoCD no namespace <code>argocd</code> via Server-Side Apply.</li>
+<li>Aplicado o manifesto <code>k8s/argocd-application.yaml</code> para orquestração declarativa contínua.</li>
+</ul>
+<hr>
+<h2 id="-status-consolidado-da-infraestrutura-e-deploy-na-aws">📊 Status Consolidado da Infraestrutura e Deploy na AWS</h2>
+<ul>
+<li><strong>Bucket S3 State:</strong> <code>solidarytech-terraform-state-857799120036</code> (Criado e ativo)</li>
+<li><strong>VPC &amp; Networking:</strong> <code>solidarytech-vpc</code> (10.0.0.0/16, Subnets privadas/públicas, IGW, NAT Gateway)</li>
+<li><strong>Mensageria &amp; NoSQL:</strong> Fila SQS <code>solidary-donations</code> e DynamoDB <code>SolidaryTechVolunteers</code> (Modo Pay-per-request / FinOps)</li>
+<li><strong>Repositórios ECR:</strong> Repositórios criados e com imagens versionadas dos 3 microsserviços.</li>
+<li><strong>Cluster EKS:</strong> <code>solidarytech-cluster</code> ativo com 2 nós Spot (<code>t3.medium</code>) em status <code>Ready</code>.</li>
+<li><strong>GitOps (ArgoCD):</strong> 7 componentes ativos no namespace <code>argocd</code> gerenciando <code>solidarytech-apps</code>.</li>
+<li><strong>Deployments &amp; Services:</strong> Todos os pods das aplicações e do PostgreSQL em status <code>1/1 Running</code>.</li>
+</ul>
+<hr>
+<h2 id="-o-que-está-faltando-próximos-passos-pelo-grupo">🚧 O que está faltando (Próximos Passos pelo Grupo)</h2>
+<ul class="contains-task-list">
+<li class="task-list-item enabled"><input class="task-list-item-checkbox" checked=""type="checkbox"> Aplicar o Terraform na AWS Academy. <em>(Provisionado com sucesso)</em></li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox" checked=""type="checkbox"> Executar o deploy no cluster EKS com as credenciais ativas da sessão. <em>(Realizado: ECR, EKS Cluster 1.30, Worker Nodes e Deployments ativos)</em></li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox" checked=""type="checkbox"> Conectar os serviços reais (AWS SQS, DynamoDB e PostgreSQL) no Kubernetes. <em>(Realizado: Postgres no cluster, SQS e DynamoDB integrados)</em></li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox" checked=""type="checkbox"> Ativar o GitOps via ArgoCD no cluster EKS. <em>(Instalado e Application aplicada)</em></li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Finalizar as configurações de SRE (SLIs, SLOs e Dashboards do Grafana/APM).</li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Documentar o Plano de Continuidade de Negócios (PCN) e Ciclo ITSM.</li>
+</ul>
+
+            
+            
+        </body>
+        </html>

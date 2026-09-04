@@ -2,12 +2,12 @@ name: Update Envs and K8s
 
 on:
   workflow_run:
-    workflows: ["Terraform Apply"]
+    workflows: ["Terraform Apply (Manual|Trigger)"]
     types: [completed]
     branches: [main, develop]
 
 jobs:
-  update-k8s:
+  update-envs:
     runs-on: ubuntu-latest
     if: github.event.workflow_run.conclusion == 'success'
     steps:
@@ -22,32 +22,45 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-east-1
 
-      - name: Get AWS resources
-        id: resources
-        run: |
-          echo "rds_address=$(aws rds describe-db-instances --query 'DBInstances[0].Endpoint.Address' --output text)" >> $GITHUB_OUTPUT
-          echo "sqs_url=$(aws sqs get-queue-url --queue-name solidary-donations --query 'QueueUrl' --output text)" >> $GITHUB_OUTPUT
-
       - name: Configure kubectl
         run: aws eks update-kubeconfig --region us-east-1 --name solidarytech-cluster
 
-      - name: Create namespace
+      - name: Get AWS Resources
+        id: tf-outputs
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "account_id=${ACCOUNT_ID}" >> $GITHUB_OUTPUT
+          echo "rds_address=$(aws rds describe-db-instances --query 'DBInstances[0].Endpoint.Address' --output text)" >> $GITHUB_OUTPUT
+          echo "sqs_url=$(aws sqs get-queue-url --queue-name solidary-donations --query 'QueueUrl' --output text)" >> $GITHUB_OUTPUT
+          echo "dynamodb_table=$(aws dynamodb list-tables --query 'TableNames[0]' --output text)" >> $GITHUB_OUTPUT
+
+      - name: Create Namespace
         run: kubectl apply -f k8s/namespace.yaml
 
-      - name: Update configmap with real values
+      - name: Update Kubernetes configmap with real values
         run: |
           kubectl create configmap solidarytech-config \
-            --from-literal=DATABASE_URL="postgres://admin:SolidaryTech2024@${{ steps.resources.outputs.rds_address }}:5432/solidarytech" \
-            --from-literal=AWS_SQS_URL="${{ steps.resources.outputs.sqs_url }}" \
-            --from-literal=AWS_REGION=us-east-1 \
+            --from-literal=DATABASE_URL="postgres://postgres_admin:${{ secrets.DB_PASSWORD }}@${{ steps.tf-outputs.outputs.rds_address }}:5432/solidarytech" \
+            --from-literal=AWS_SQS_URL="${{ steps.tf-outputs.outputs.sqs_url }}" \
+            --from-literal=DYNAMODB_TABLE="${{ steps.tf-outputs.outputs.dynamodb_table }}" \
             --namespace=solidarytech \
             --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Deploy services
+      - name: Apply Manifests & Update Images
         run: |
-          kubectl apply -f k8s/ngo-service.yaml
-          kubectl apply -f k8s/donation-service.yaml
-          kubectl apply -f k8s/volunteer-service.yaml
+          ECR_REGISTRY="${{ steps.tf-outputs.outputs.account_id }}.dkr.ecr.us-east-1.amazonaws.com"
+
+          # 1. Aplica os arquivos do k8s
+          kubectl apply -f k8s/ngo-service.yaml -n solidarytech
+          kubectl apply -f k8s/donation-service.yaml -n solidarytech
+          kubectl apply -f k8s/volunteer-service.yaml -n solidarytech
+
+          # 2. Garante o caminho correto das imagens ECR
+          kubectl set image deployment/ngo-service ngo-service=${ECR_REGISTRY}/solidarytech/ngo-service:latest -n solidarytech
+          kubectl set image deployment/donation-service donation-service=${ECR_REGISTRY}/solidarytech/donation-service:latest -n solidarytech
+          kubectl set image deployment/volunteer-service volunteer-service=${ECR_REGISTRY}/solidarytech/volunteer-service:latest -n solidarytech
+
+          # 3. Reinicia os serviços para pegar o ConfigMap novo
           kubectl rollout restart deployment/ngo-service -n solidarytech
           kubectl rollout restart deployment/donation-service -n solidarytech
           kubectl rollout restart deployment/volunteer-service -n solidarytech
