@@ -1,74 +1,68 @@
-# 🎬 Roteiro de Gravação - Entregáveis da Fase 5 (Duas Pessoas)
+# 🎬 Roteiro de Gravação - Entregáveis da Fase 5 (Vídeos Separados)
 
-Este roteiro atende **exatamente** aos requisitos da banca (Pitch Executivo + Demo Tech). A apresentação é dividida para **duas pessoas** (Pessoa 1 e Pessoa 2).
+Este roteiro atende **rigorosamente** a todos os requisitos do documento oficial `POSTECH - DCLT - Hackathon - Fase 5.pdf`. A apresentação foi desenhada para ser gravada de forma assíncrona por **duas pessoas**. 
 
 ---
+
+# 📹 PARTE 1: Gravação da Pessoa 1
+*(Foco: O Pitch Executivo, Fundação DevOps e FinOps/DR)*
 
 ## 🟢 CENA 1: O Pitch Executivo (Vendendo para a Diretoria)
-**🎙️ Pessoa 1** assume a palavra.
-- **Objetivo:** Vender a arquitetura, PCN e viabilidade financeira (FinOps) para a diretoria.
+- **Objetivo (PDF):** *Apresente a arquitetura, o PCN e as estratégias financeiras vendendo a viabilidade para a ONG.*
 
 **FALA (Pessoa 1):** 
-> "Olá, prezada diretoria da SolidaryTech. Hoje apresentamos a evolução arquitetural da nossa plataforma de doações. O grande foco dessa nova versão foi trazer viabilidade financeira, segurança de ponta a ponta e altíssima disponibilidade. 
+> "Olá, prezada diretoria da SolidaryTech, eu sou o(a) [Seu Nome]. Hoje apresentamos a nova plataforma de doações. Focamos em garantir viabilidade financeira, segurança e resiliência total.
 > 
-> No lado financeiro (FinOps), garantimos previsibilidade: aplicamos *Rightsizing* nos nossos nós e contêineres, além de adotar Instâncias Spot, o que nos permitiu projetar um custo mensal na casa de 100 dólares. Tudo está rigorosamente tagueado via código, então cada centavo gasto é rastreado para o seu devido centro de custo.
+> Falando da nossa estratégia financeira (FinOps), adotamos *Rightsizing* no Kubernetes e o uso de Instâncias Spot, o que manteve nosso orçamento projetado extremamente enxuto. Além disso, criamos uma rigorosa Política de Tags no nosso código Terraform (`Project`, `Environment`, `CostCenter`), garantindo que cada centavo da infraestrutura seja justificado.
 > 
-> No lado da Segurança e Continuidade de Negócios (PCN), nós não brincamos em serviço. Desenhamos um processo formal de ITSM para gestão de incidentes. E se um desastre acontecer na AWS? Temos uma estratégia de **Disaster Recovery** em Multi-AZ. Toda nossa infraestrutura está espalhada em mais de um data center físico, e nosso banco de dados tem backups automatizados, garantindo um RPO de apenas 15 minutos e RTO de 1 hora. A plataforma está pronta para escalar com responsabilidade."
+> Sobre a Segurança e Continuidade de Negócios (PCN), nós não corremos riscos. Elaboramos um documento executivo de PCN com RTO de 1 hora e RPO de 15 minutos para os dados das doações. E se a AWS cair? Desenvolvemos uma estratégia prática de **Disaster Recovery (DR)** utilizando o conceito de Multi-AZ nativo da nuvem."
 
----
+## 🟢 CENA 2: Demo Tech - Fundação DevOps e Evidências
+- **Objetivo (PDF):** *Exiba o Terraform rodando (ou evidencie criação por tags) e demonstre o sistema de Backup/DR em ação.*
 
-## 🟢 CENA 2: Demo Tech - CI/CD e ArgoCD
-**🎙️ Pessoa 2** assume a palavra.
-- **Objetivo:** Mostrar os pipelines rodando e o deploy no cluster.
-
-**💻 Ação no Navegador:**
-*(Abra o GitHub do projeto na aba 'Actions')*
-
-**FALA (Pessoa 2):**
-> "Entrando na Demo Tech, aqui é o [Nome da Pessoa 2]. Tudo o que a [Pessoa 1] prometeu para a diretoria foi implementado no código. Aqui na aba de Actions do GitHub, vocês podem ver nossos pipelines de CI/CD rodando. Toda vez que um código sobe, ele é validado, passa por testes de segurança (DevSecOps) e é empacotado no AWS ECR."
-
-**💻 Ação no Terminal e Navegador:**
-*(Rode `kubectl port-forward svc/argocd-server -n argocd 8080:443` e abra o ArgoCD).*
-
-**FALA (Pessoa 2):**
-> "Mas nós não deixamos o GitHub tocar no nosso cluster de produção. Nós adotamos o **GitOps** com o **ArgoCD**. O ArgoCD puxa automaticamente a versão segura do código e aplica no cluster Kubernetes. Como podem ver aqui, os corações verdes provam que o ambiente de produção está espelhado e saudável."
-
----
-
-## 🟢 CENA 3: Demo Tech - Terraform e IaC (Evidência Financeira)
-**🎙️ Pessoa 1** assume a palavra.
-- **Objetivo:** Mostrar o Terraform e a criação baseada em Tags (FinOps).
-
-**💻 Ação no VSCode e AWS:**
-*(Mostre o arquivo `terraform/main.tf` focando no bloco `default_tags`, depois mostre a aba Tags do Banco RDS na AWS)*
+**💻 Ação Visual:**
+*(Mostre a tela do arquivo `terraform/main.tf` focando nas `default_tags` e, em seguida, as subnets na AWS ou as tags do Banco)*
 
 **FALA (Pessoa 1):**
-> "Toda essa infraestrutura, como o EKS, DynamoDB e SQS, foi subida via Terraform. Aqui está o nosso código declarativo. Notem este bloco de `default_tags`. Nós forçamos que todos os recursos recebam tags de Projeto, Ambiente e Centro de Custos. Na AWS, aqui no console do RDS, provamos que essas tags foram herdadas com sucesso, fechando o ciclo do FinOps que prometemos no Pitch."
+> "Entrando na Demo Tech, nós cumprimos 100% dos requisitos da Fundação DevOps. Toda a nossa infraestrutura foi provisionada via **Infraestrutura como Código (IaC)** com o Terraform. Aqui no código, evidenciamos a criação dos recursos baseada nas Tags de FinOps, que são refletidas perfeitamente nos recursos da nuvem.
+> 
+> Evidenciando nosso **Disaster Recovery em ação**, aqui estão os módulos do nosso Terraform provisionando as redes e os bancos em múltiplas zonas de disponibilidade (`us-east-1a` e `us-east-1b`), além de configurarmos o backup de Snapshot automatizado do nosso RDS PostgreSQL para retenção externa de dados.
+> 
+> Agora, o(a) [Nome da Pessoa 2] vai demonstrar nossa esteira de CI/CD, GitOps e a parte de Monitoramento e AIOps."
+
+*(Fim da gravação da Pessoa 1)*
 
 ---
+---
 
-## 🟢 CENA 4: Demo Tech - Observabilidade (Traces e Alertas)
-**🎙️ Pessoa 2** assume a palavra.
-- **Objetivo:** Mostrar as Golden Metrics, Dashboard SRE, Traces e Alertas.
+# 📹 PARTE 2: Gravação da Pessoa 2
+*(Foco: CI/CD, GitOps, SRE, APM e AIOps)*
 
-**💻 Ação no Terminal e Navegador:**
-*(Rode `kubectl port-forward svc/prometheus-grafana -n monitoring 8084:80` e abra o Grafana)*
+## 🟢 CENA 3: Demo Tech - CI/CD e GitOps (ArgoCD)
+- **Objetivo (PDF):** *Mostre os pipelines CI/CD rodando e o deploy no cluster via ArgoCD.*
+
+**💻 Ação Visual:**
+*(Mostre a tela do GitHub Actions rodando e depois abra o painel do ArgoCD com os corações verdes)*
 
 **FALA (Pessoa 2):**
-> "Por fim, para manter nosso SLA, precisamos de olhos na plataforma. Esta é a nossa stack de SRE rodando no Grafana. Aqui temos os Dashboards monitorando as **Golden Metrics**: uso de CPU, Memória, Latência e tráfego de rede (Traces). 
+> "Dando continuidade, aqui é o(a) [Seu Nome]. Construímos nossos microsserviços em Docker e configuramos a esteira **CI/CD com DevSecOps**. Aqui na aba Actions do GitHub, mostramos nossos pipelines rodando com automação de testes e scanners de segurança.
 > 
-> Baseado nos nossos SLOs, nós também configuramos **Alertas Ativos**. *(Abra a aba de Alerting do Grafana ou mostre o `prometheus-rules.yaml`)*. Se um serviço falhar, nosso fluxo de AIOps detecta a anomalia e notifica a equipe imediatamente via webhook antes que o usuário final perceba o impacto."
+> Para o deploy, utilizamos **GitOps** através do **ArgoCD**. Ao invés de aplicarmos via `kubectl`, o ArgoCD garante a entrega contínua puxando o código direto do GitHub e aplicando de forma declarativa e segura no nosso cluster Kubernetes, como evidenciado pelo status Healthy da aplicação."
 
----
+## 🟢 CENA 4: Demo Tech - Observabilidade, APM e Dashboard SRE
+- **Objetivo (PDF):** *Mostre a rastreabilidade no APM (Traces), os alertas configurados e o Dashboard SRE com Golden Metrics e SLOs.*
 
-## 🟢 CENA 5: Demo Tech - DR na Prática e Encerramento
-**(Pessoa 1 e Pessoa 2)**
+**💻 Ação Visual:**
+*(Mostre o Grafana nos gráficos de Workload/Pods para CPU/Memória, e a tela de Alerting do Prometheus/Grafana).*
 
-**💻 Ação no AWS Console:**
-*(Mostre as subnets na VPC ou as configurações do RDS mostrando Multi-AZ/Snapshots)*
+**FALA (Pessoa 2):**
+> "Na frente de Confiabilidade (SRE) e Observabilidade, nós implementamos a stack do Prometheus e Grafana.
+> 
+> Este é o nosso **Dashboard SRE**. Aqui monitoramos o serviço de doações calculando os nossos **SLOs** baseados nas **Golden Metrics**: estamos rastreando ativamente a Latência, a Taxa de Erros, e o uso de CPU e Memória para garantir o *Rightsizing*. A rastreabilidade das requisições (Traces/APM) nos permite identificar os gargalos da aplicação em tempo real.
+> 
+> Por fim, estruturamos uma gestão preditiva (ITSM/AIOps). Aqui estão nossos **Alertas configurados**. Se o Error Budget começar a ser consumido de forma anômala, o sistema dispara notificações automáticas, reduzindo drasticamente nosso tempo de resposta (MTTR)."
 
-**FALA (Pessoa 1):**
-> "Para finalizar provando a nossa estratégia de Backup e DR que vendemos no Pitch: nossa rede foi criada abrangendo múltiplas zonas (`us-east-1a` e `us-east-1b`). E o nosso banco de dados tem retenção de backup ativa pela nuvem."
+**FALA FINAL (Pessoa 2):**
+> "Com todas essas frentes operando em conjunto, a SolidaryTech atinge o mais alto nível de maturidade operacional em nuvem exigido para a Fase 5. Muito obrigado!" 🎬
 
-**FALA (Ambos):**
-> "Nós estruturamos a base perfeita para um crescimento seguro e barato. Esse foi o projeto SolidaryTech para a Fase 5. Muito obrigado!" 🎬
+*(Fim da gravação da Pessoa 2)*
