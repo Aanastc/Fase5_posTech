@@ -151,3 +151,75 @@ argocd-server-6fdd8cb549-9mm5p                      1/1     Running   0         
 ## ✅ 4. Conclusão
 
 A arquitetura foi implantada com sucesso na AWS, respeitando as restrições de permissões do perfil acadêmico (`LabRole`), adotando boas práticas de DevSecOps, FinOps e infraestrutura resiliente em Kubernetes. Toda a esteira de código, manifests e documentação está padronizada e pronta para avaliação.
+
+---
+
+## 3. Entregáveis Técnicos e Evidências
+
+### 3.1 Seção SRE: Definição formal de SLI, SLO e SLA do serviço de doações
+
+O serviço de doações é um dos componentes mais críticos do sistema, exigindo alta disponibilidade e resiliência. Para garantir a confiabilidade da operação financeira da SolidaryTech, adotamos as seguintes métricas de SRE:
+
+- **SLA (Service Level Agreement):** Definimos um compromisso de **99.9%** de disponibilidade mensal para a API de doações (permitindo, no máximo, ~43 minutos de indisponibilidade por mês).
+- **SLO (Service Level Objective):** Nossa meta interna de engenharia é mais rigorosa, buscando **99.95%** de disponibilidade e garantindo que 95% das requisições de doação sejam processadas em menos de 200ms.
+- **SLI (Service Level Indicator):** As métricas reais coletadas no Prometheus/Grafana medem:
+  1. *Taxa de Erro:* (Requisições HTTP 500 / Total de Requisições).
+  2. *Latência:* Tempo de resposta do endpoint de submissão de doações no Kubernetes.
+
+> **Evidência Visual:**  
+> [INSERIR PRINT AQUI - Print do painel do Grafana acessado via localhost mostrando os gráficos e pods do donation-service rodando, provando o monitoramento dos SLIs]
+
+---
+
+### 3.2 Seção FinOps: Análise de custos mensais (Forecast) e evidências das tags
+
+Para garantir a eficiência financeira e o mapeamento de custos (showback/chargeback) na AWS, aplicamos uma estratégia rigorosa de FinOps baseada em instâncias Spot e Rightsizing.
+
+**Análise de Custos Mensais (Forecast)**
+Nossa infraestrutura em us-east-1 está orçada em aproximadamente **.00 / mês** em ambiente de produção, distribuída da seguinte forma:
+- **EKS Control Plane:** .00
+- **EC2 Node Group (2x t3.medium SPOT):** .00
+- **RDS PostgreSQL (db.t3.micro):** .00
+- **SQS, DynamoDB, ECR, S3:** ~.00
+
+**Evidências de Tags Aplicadas**
+Todo o código Terraform foi desenhado com o bloco default_tags, aplicando compulsoriamente etiquetas financeiras em todos os recursos gerados, facilitando a filtragem no *AWS Cost Explorer*.
+- **Project:** SolidaryTech
+- **Environment:** Production
+- **CostCenter:** FinOps
+
+> **Evidência Visual:**  
+> [INSERIR PRINT AQUI - Print do console da AWS mostrando a aba "Tags" de uma instância EC2 (Worker Node) ou do RDS, onde aparecem as tags Project, Environment e CostCenter aplicadas ao recurso]
+
+---
+
+### 3.3 Seção Segurança e DR: Documento de PCN (RPO/RTO) e estratégia de Disaster Recovery
+
+Para mitigar cenários de desastres (queda de uma zona de disponibilidade na AWS ou falhas catastróficas), desenvolvemos um Plano de Continuidade de Negócios (PCN) focado em resiliência.
+
+**Métricas de Recuperação:**
+- **RPO (Recovery Point Objective):** 15 minutos. Toleramos, no máximo, a perda de 15 minutos de dados financeiros em caso de queda do banco principal (garantido via backups automatizados do RDS).
+- **RTO (Recovery Time Objective):** 1 hora. Tempo máximo estipulado para restabelecer a infraestrutura completa via Terraform + ArgoCD do zero em outra região, caso necessário.
+
+**Estratégia de Disaster Recovery:**
+Nossa estratégia utiliza a abordagem *Warm Standby / Pilot Light*. O cluster EKS foi provisionado cruzando múltiplas zonas de disponibilidade (Multi-AZ) em us-east-1a e us-east-1b. Além disso, o banco de dados principal possui rotinas de snapshot ativas. Em caso de desastre regional, o IaC (Terraform) aliado ao GitOps (ArgoCD) permite reconstruir o ambiente de computação em minutos em uma nova região, conectando-se ao último snapshot do banco de dados recuperado.
+
+> **Evidência Visual:**  
+> [INSERIR PRINT AQUI - Print do arquivo docs/pcn/README.md do repositório contendo a tabela formal do PCN OU Print do painel da AWS confirmando a criação de subnets em diferentes Availability Zones]
+
+---
+
+### 3.4 Seção ITSM/AIOps: Desenho do ciclo de vida de incidentes
+
+Na SolidaryTech, automatizamos o ciclo de vida de incidentes eliminando ao máximo o esforço manual (Toil) e adotando AIOps para triagem rápida.
+
+**Desenho do Fluxo de Incidentes:**
+1. **Detecção (Monitoramento):** O Prometheus monitora as métricas do cluster continuamente. Se o SLI da fila do SQS cair, ou a taxa de erros do *donation-service* subir, um alerta é gerado.
+2. **Alarme (AIOps):** O Alertmanager envia a notificação para ferramentas de plantão (ex: PagerDuty/Slack), acordando apenas o desenvolvedor de plantão responsável pelo microsserviço afetado.
+3. **Atuação:** O analista avalia o log via Grafana, identifica a falha e propõe uma correção no código fonte via Pull Request no GitHub.
+4. **Resolução (GitOps):** Ao dar merge na branch principal (main), o ArgoCD detecta a mudança declarativa e sincroniza automaticamente a correção com o Kubernetes na AWS, estabilizando o ambiente.
+5. **Encerramento:** O chamado é encerrado e a equipe elabora um *Post-Mortem* (Relatório pós-incidente).
+
+> **Evidência Visual:**  
+> [INSERIR PRINT AQUI - Print do documento docs/itsm/ciclo.md contendo o fluxo desenhado, OU um print do dashboard do Grafana/Alertmanager provando que existe uma ferramenta ativa para detectar o incidente]
+
